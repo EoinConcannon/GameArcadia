@@ -1,4 +1,3 @@
-//generated with copilot, refine later
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
