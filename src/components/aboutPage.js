@@ -17,6 +17,9 @@ const FrontPage = () => {
             <div className="bottom-border">
                 <button className="nav-button" onClick={() => navigate('/about')}>About</button>
             </div>
+
+            <p>This is the about page</p>
+            
         </div>
     );
 };
