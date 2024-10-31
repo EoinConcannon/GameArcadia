@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import FrontPage from './components/frontPage';
 import StorePage from './components/storePage';
+import LoginPage from './components/loginPage';
 import AboutPage from './components/aboutPage';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -17,6 +18,7 @@ function App() {
           <Navbar.Brand href="/">GameArcadia</Navbar.Brand>
           <Nav className="me-auto">
             <Nav.Link href="store">Store</Nav.Link>
+            <Nav.Link href="login">Login</Nav.Link>
           </Nav>
         </Container>
       </Navbar>
@@ -24,6 +26,7 @@ function App() {
         <Routes>
           <Route path="/" element={<FrontPage />} />
           <Route path="/store" element={<StorePage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </Router>
