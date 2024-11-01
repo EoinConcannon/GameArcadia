@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import FrontPage from './components/frontPage';
 import StorePage from './components/storePage';
 import LoginPage from './components/loginPage';
+import SignUpPage from './components/signupPage';
 import AboutPage from './components/aboutPage';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -26,6 +27,7 @@ function App() {
         <Routes>
           <Route path="/" element={<FrontPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
           <Route path="/store" element={<StorePage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
