@@ -1,0 +1,14 @@
+[
+    {
+        "username": "Jon Arbuckle",
+        "email": "jon.arbuckle@example.com",
+        "password": "passWord123",
+        "role": "admin"
+    },
+    {
+        "username": "Bob Smith",
+        "email": "bob.smith@example.com",
+        "password": "securePass456",
+        "role": "user"
+    }
+]
