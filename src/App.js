@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import FrontPage from './components/frontPage';
-import StorePage from './components/storePage';
-import LoginPage from './components/loginPage';
-import SignUpPage from './components/signupPage';
-import AboutPage from './components/aboutPage';
+import FrontPage from './components/FrontPage';
+import StorePage from './components/StorePage';
+import LoginPage from './components/LoginPage';
+import SignUpPage from './components/SignUpPage';
+import AboutPage from './components/AboutPage';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Nav from 'react-bootstrap/Nav';
