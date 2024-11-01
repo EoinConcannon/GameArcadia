@@ -67,4 +67,8 @@ const LoginPage = ({ setLoggedInUser }) => {
     );
 };
 
+<<<<<<< HEAD:src/components/loginPage.js
 export default LoginPage;
+=======
+export default FrontPage;
+>>>>>>> 035d99bbcd273e557c7fd156c7504c6b9a435fbd:src/components/LoginPage.js
