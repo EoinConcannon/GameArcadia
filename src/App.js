@@ -13,11 +13,17 @@ import Container from 'react-bootstrap/Container';
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null); //tracks if user logged in
+  const [users, setUsers] = useState([]); // Track users
   const navigate = useNavigate();
 
   const handleLogout = () => {
     setLoggedInUser(null); //clear logged in user status
     navigate('/');
+  };
+
+  // this is only temporary, we will replace this with a database later
+  const addUser = (newUser) => {
+    setUsers((prevUsers) => [...prevUsers, newUser]);
   };
 
   return (
@@ -40,8 +46,8 @@ function App() {
       </Navbar>
       <Routes>
         <Route path="/" element={<FrontPage />} />
-        <Route path="/login" element={<LoginPage setLoggedInUser={setLoggedInUser} />} />
-        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
+        <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
         <Route path="/store" element={<StorePage />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
