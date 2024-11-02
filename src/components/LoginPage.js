@@ -16,8 +16,8 @@ const LoginPage = ({ setLoggedInUser }) => {
             const user = users.find(u => u.username === username && u.password === password);
 
             if (user) {
-                setLoggedInUser(username);  // Set the logged-in user in App state
-                navigate('/');              // Redirect to home page after login
+                setLoggedInUser(username);
+                navigate('/'); //redirect to home page after login
             } else {
                 setError('Invalid username or password');
             }

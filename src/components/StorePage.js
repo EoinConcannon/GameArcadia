@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FrontPage = () => {
+const StorePage = () => {
 
     return (
         <div className="front-page">
@@ -9,4 +9,4 @@ const FrontPage = () => {
     );
 };
 
-export default FrontPage;
+export default StorePage;

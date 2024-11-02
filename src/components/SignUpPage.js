@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const FrontPage = () => {
+const SignUpPage = () => {
     const navigate = useNavigate();
 
     return (
@@ -50,4 +50,4 @@ const FrontPage = () => {
     );
 };
 
-export default FrontPage;
+export default SignUpPage;
