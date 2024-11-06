@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import FrontPage from './components/FrontPage';
 import StorePage from './components/StorePage';
+import CartPage from './components/CartPage';
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
 import AboutPage from './components/AboutPage';
@@ -49,6 +50,7 @@ function App() {
         <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
         <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
         <Route path="/store" element={<StorePage />} />
+        <Route path="/cart" element={<CartPage />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
       <Navbar bg="primary" data-bs-theme="light" fixed="bottom">
