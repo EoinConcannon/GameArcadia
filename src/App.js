@@ -42,6 +42,9 @@ function App() {
               <Nav.Link as={Link} to="/login">Login</Nav.Link>
             )}
             <Nav.Link as={Link} to="/store">Store</Nav.Link>
+            {loggedInUser && (
+              <Nav.Link as={Link} to="/cart">Shopping Cart</Nav.Link>
+            )}
           </Nav>
         </Container>
       </Navbar>
