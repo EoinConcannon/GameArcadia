@@ -1,5 +1,7 @@
 .App {
   text-align: center;
+  background-color: #121212;
+  color: #e0e0e0;
 }
 
 .App-logo {
@@ -14,25 +16,51 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #1e1e1e;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: white;
+  color: #e0e0e0;
 }
 
 .App-link {
-  color: #61dafb;
+  color: #bb86fc;
+  text-decoration: none;
+}
+
+.App-link:hover {
+  color: #03dac6;
 }
 
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
+
+button {
+  background-color: #03dac6;
+  border: none;
+  color: #121212;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #00bfa6;
+}
+
+.btn-primary {
+  background-color: #234744; 
+  border: none;
+}
+
+/* might use either SCSS or SASS for styling */

@@ -23,7 +23,7 @@ const StorePage = () => {
                             <Card.Text>
                                 €29.99
                             </Card.Text>
-                            <Button variant="primary">Purchase</Button>
+                            <Button variant="primary">Add to cart</Button>
                         </Card.Body>
                     </Card>
                 </Col>
@@ -45,7 +45,7 @@ const StorePage = () => {
                             <Card.Text>
                                 €29.99
                             </Card.Text>
-                            <Button variant="primary">Purchase</Button>
+                            <Button variant="primary">Add to cart</Button>
                         </Card.Body>
                     </Card>
                 </Col>
