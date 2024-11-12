@@ -2,9 +2,20 @@ import React from 'react';
 import { useCart } from '../contexts/CartContext';
 
 const CartPage = () => {
-    const { cartItems, removeFromCart } = useCart();
+    const { cartItems, removeFromCart, clearCart } = useCart();
 
     const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
+
+    //Proceed to checkout button
+    //TODO: send user email on successful purchase
+    const handlePurchase = () => {
+        if (cartItems.length === 0) {
+            alert('Your cart is empty!');
+            return;
+        }
+        alert('Your purchase was successful.');
+        clearCart();
+    };
 
     return (
         <div className="cart-page container my-5">
@@ -31,7 +42,9 @@ const CartPage = () => {
                     ))}
                     <div className="d-flex justify-content-between mt-4">
                         <h4>Total: €{totalPrice.toFixed(2)}</h4>
-                        <button className="btn btn-primary">Proceed to Purchase</button>
+                        <button className="btn btn-primary" onClick={handlePurchase}>
+                            Proceed to Checkout
+                        </button>
                     </div>
                 </div>
             )}
