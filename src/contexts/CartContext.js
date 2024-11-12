@@ -10,12 +10,18 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
 
-    const addToCart = (product) => {
-        setCartItems((prevItems) => [...prevItems, product]);
+    const addToCart = (item) => {
+        const itemExists = cartItems.some((cartItem) => cartItem.id === item.id);
+
+        if (itemExists) {
+            return; //do not add duplicate items, most other gaming sites do this
+        }
+
+        setCartItems((prevItems) => [...prevItems, item]);
     };
 
     const removeFromCart = (id) => {
-        setCartItems(cartItems.filter((item) => item.id !== id));
+        setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
     };
 
     return (

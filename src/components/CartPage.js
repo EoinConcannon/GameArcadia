@@ -26,8 +26,6 @@ const CartPage = () => {
                                 >
                                     Remove
                                 </button>
-                                {/* TODO: if you have more than one of the same item, remove will remove all instances
-                                    of it, fix this later and modify the bottom navbar, sometimes obsurces user's view*/}
                             </div>
                         </div>
                     ))}
