@@ -4,6 +4,7 @@ import FrontPage from './components/FrontPage';
 import StorePage from './components/StorePage';
 import CartPage from './components/CartPage';
 import LoginPage from './components/LoginPage';
+import ProfilePage from './components/ProfilePage';
 import SignUpPage from './components/SignUpPage';
 import AboutPage from './components/AboutPage';
 import './App.css';
@@ -23,7 +24,7 @@ function App() {
     navigate('/');
   };
 
-  // this is only temporary, we will replace this with a database later
+  // this is only temporary, will replace this with a database later
   const addUser = (newUser) => {
     setUsers((prevUsers) => [...prevUsers, newUser]);
   };
@@ -35,17 +36,17 @@ function App() {
           <Container>
             <Navbar.Brand as={Link} to="/">GameArcadia</Navbar.Brand>
             <Nav className="me-auto">
+              <Nav.Link as={Link} to="/store">Store</Nav.Link>
+            </Nav>
+            <Nav className="ms-auto">
               {loggedInUser ? (
                 <>
-                  <Nav.Link as={Link} to="/profile">{loggedInUser}</Nav.Link> {/* add a profile page later */}
+                  <Nav.Link as={Link} to="/profile">{loggedInUser}</Nav.Link>
+                  <Nav.Link as={Link} to="/cart">Shopping Cart</Nav.Link>
                   <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
                 </>
               ) : (
                 <Nav.Link as={Link} to="/login">Login</Nav.Link>
-              )}
-              <Nav.Link as={Link} to="/store">Store</Nav.Link>
-              {loggedInUser && (
-                <Nav.Link as={Link} to="/cart">Shopping Cart</Nav.Link>
               )}
             </Nav>
           </Container>
@@ -53,6 +54,7 @@ function App() {
         <Routes>
           <Route path="/" element={<FrontPage />} />
           <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
+          <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} />} />
           <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
           <Route path="/store" element={<StorePage />} />
           <Route path="/cart" element={<CartPage />} />
