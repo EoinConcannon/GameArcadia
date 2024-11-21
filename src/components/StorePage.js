@@ -7,8 +7,8 @@ const StorePage = () => {
 
     //temporary data storage for games
     const products = [
-        { id: 1, name: 'Game 1', description: 'Description of Game 1', price: 29.99 },
-        { id: 2, name: 'Game 2', description: 'Description of Game 2', price: 19.99 },
+        { id: 1, name: 'Game 1', description: 'Game Description 1', price: 29.99 },
+        { id: 2, name: 'Game 2', description: 'Game Description 2', price: 19.99 },
     ];
 
     return (
@@ -20,7 +20,7 @@ const StorePage = () => {
                         <Card>
                             <Card.Img
                                 variant="top"
-                                src="https://via.placeholder.com/150"
+                                src="" //CHANGE THIS LATER
                                 alt={product.name}
                                 className="img-fluid"
                                 style={{ maxHeight: '200px', objectFit: 'cover' }}
