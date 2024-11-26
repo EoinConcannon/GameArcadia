@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Button, Row, Col } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
+import { supabase } from '../supabase';
 
 const StorePage = () => {
     const { addToCart } = useCart();

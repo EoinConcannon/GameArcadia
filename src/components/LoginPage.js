@@ -1,6 +1,6 @@
-//generated temporary login from chatGPT
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+//import { supabase } from '../supabase';
 
 const LoginPage = ({ setLoggedInUser }) => {
     const [username, setUsername] = useState('');
