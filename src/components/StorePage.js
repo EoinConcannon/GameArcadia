@@ -1,16 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Button, Row, Col } from 'react-bootstrap';
-import { useCart } from '../contexts/CartContext';
 import { supabase } from '../supabase';
+import { Row, Col, Card, Button } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const StorePage = () => {
-    const { addToCart } = useCart();
+    const [products, setProducts] = useState([]);
 
-    //temporary data storage for games
-    const products = [
-        { id: 1, name: 'Game 1', description: 'Game Description 1', price: 29.99 },
-        { id: 2, name: 'Game 2', description: 'Game Description 2', price: 19.99 },
-    ];
+    useEffect(() => {
+        const fetchProducts = async () => {
+            const { data, error } = await supabase
+                .from('products')
+                .select('*');
+
+            if (error) {
+                console.error('Error fetching products:', error);
+            } else {
+                console.log('Fetched products:', data);
+                setProducts(data);
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
+    const addToCart = (product) => {
+        console.log('Adding to cart:', product);
+    };
 
     return (
         <div className="store-page">
@@ -21,7 +36,7 @@ const StorePage = () => {
                         <Card>
                             <Card.Img
                                 variant="top"
-                                src="" //CHANGE THIS LATER
+                                src={product.image_url || 'default-image-url'} // Replace with actual image URL field
                                 alt={product.name}
                                 className="img-fluid"
                                 style={{ maxHeight: '200px', objectFit: 'cover' }}
