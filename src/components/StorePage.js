@@ -9,7 +9,7 @@ const StorePage = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             const { data, error } = await supabase
-                .from('products')
+                .from('games')
                 .select('*');
 
             if (error) {
