@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-//import { supabase } from '../supabase';
+import { supabase } from '../supabase';
 
 const LoginPage = ({ setLoggedInUser }) => {
     const [username, setUsername] = useState('');
@@ -10,20 +10,28 @@ const LoginPage = ({ setLoggedInUser }) => {
 
     const handleLogin = async () => {
         try {
-            const response = await fetch('/loginTest.json');
-            const users = await response.json();
+            const { data: users, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('username', username);
+
+            if (error) {
+                setError('Error fetching user data');
+                console.error('Error fetching user data:', error);
+                return;
+            }
 
             const user = users.find(u => u.username === username && u.password === password);
 
             if (user) {
                 setLoggedInUser(username);
-                navigate('/'); //redirect to home page after login
+                navigate('/'); // Redirect to home page after login
             } else {
                 setError('Invalid username or password');
             }
-        } catch (error) {
-            console.error('Error fetching users:', error);
+        } catch (err) {
             setError('An error occurred during login');
+            console.error('Login error:', err);
         }
     };
 
