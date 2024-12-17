@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext } from 'react';
 
 const CartContext = createContext();
 
-//hook to use the CartContext
+// Hook to use the CartContext
 export const useCart = () => {
     return useContext(CartContext);
 };
@@ -14,7 +14,7 @@ export const CartProvider = ({ children }) => {
         const itemExists = cartItems.some((cartItem) => cartItem.id === item.id);
 
         if (itemExists) {
-            return; //do not add duplicate items, most other gaming sites do this
+            return; // Do not add duplicate items
         }
 
         setCartItems((prevItems) => [...prevItems, item]);

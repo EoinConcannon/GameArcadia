@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { Row, Col, Card, Button } from 'react-bootstrap';
+import { useCart } from '../contexts/CartContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const StorePage = () => {
     const [products, setProducts] = useState([]);
+    const { addToCart } = useCart();
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -22,10 +24,6 @@ const StorePage = () => {
 
         fetchProducts();
     }, []);
-
-    const addToCart = (product) => {
-        console.log('Adding to cart:', product);
-    };
 
     return (
         <div className="store-page">

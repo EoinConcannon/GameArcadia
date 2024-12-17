@@ -51,15 +51,15 @@ function App() {
             </Nav>
           </Container>
         </Navbar>
-        <Routes>
-          <Route path="/" element={<FrontPage />} />
-          <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
-          <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} />} />
-          <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
-          <Route path="/store" element={<StorePage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/about" element={<AboutPage />} />
-        </Routes>
+          <Routes>
+            <Route path="/" element={<FrontPage />} />
+            <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
+            <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} />} />
+            <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
+            <Route path="/store" element={<StorePage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/about" element={<AboutPage />} />
+          </Routes>
         <Navbar bg="light" data-bs-theme="light" fixed="bottom">
           <Container>
             <Nav className="ms-auto">
