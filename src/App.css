@@ -8,6 +8,7 @@
 html, body {
   height: 100%;
   margin: 0;
+  padding: 0;
 }
 
 body {
@@ -74,4 +75,17 @@ button:hover {
   border: none;
 }
 
-/* might use either SCSS or SASS for styling */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1;
+  padding-bottom: 20px; /* Add padding to the bottom of the content */
+}
+
+.footer {
+  flex-shrink: 0;
+}

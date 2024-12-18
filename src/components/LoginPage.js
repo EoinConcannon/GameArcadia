@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 
 const LoginPage = ({ setLoggedInUser }) => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const navigate = useNavigate();
+    const [username, setUsername] = useState(''); // Track the username input
+    const [password, setPassword] = useState(''); // Track the password input
+    const [error, setError] = useState(''); // Track any error messages
+    const navigate = useNavigate(); // Hook to navigate to different pages
 
     const handleLogin = async () => {
         try {
+            // Fetch user data from Supabase
             const { data: users, error } = await supabase
                 .from('users')
                 .select('*')
@@ -21,11 +22,12 @@ const LoginPage = ({ setLoggedInUser }) => {
                 return;
             }
 
+            // Find the user with matching username and password in supabase data
             const user = users.find(u => u.username === username && u.password === password);
 
             if (user) {
-                setLoggedInUser(user);
-                localStorage.setItem('loggedInUser', JSON.stringify(user));
+                setLoggedInUser(user); // Set the logged-in user state
+                localStorage.setItem('loggedInUser', JSON.stringify(user)); // Save user to local storage
                 navigate('/'); // Redirect to home page after login
             } else {
                 setError('Invalid username or password');
@@ -68,7 +70,9 @@ const LoginPage = ({ setLoggedInUser }) => {
                         </button>
                     </div>
                     <div className="mb-3">
-                        <button type="button" className="btn btn-primary w-100" onClick={() => navigate('/signup')}>Sign Up</button>
+                        <button type="button" className="btn btn-primary w-100" onClick={() => navigate('/signup')}>
+                            Sign Up
+                        </button>
                     </div>
                 </form>
             </div>

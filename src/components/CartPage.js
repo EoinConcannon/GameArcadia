@@ -2,17 +2,19 @@ import React from 'react';
 import { useCart } from '../contexts/CartContext';
 
 const CartPage = () => {
-    const { cartItems, removeFromCart, clearCart } = useCart();
+    const { cartItems, removeFromCart, clearCart } = useCart(); // Access cart context
 
+    // Calculate the total price of items in the cart
     const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
 
+    // Handle purchase action
     const handlePurchase = () => {
         if (cartItems.length === 0) {
             alert('Your cart is empty!');
             return;
         }
-        alert('Your purchase was successful.');
-        clearCart();
+        alert('Your purchase was successful.'); // Alert for successful purchase
+        clearCart(); // Clear the cart after purchase
     };
 
     return (
@@ -39,7 +41,7 @@ const CartPage = () => {
                         </div>
                     ))}
                     <div className="d-flex justify-content-between mt-4">
-                        <h4>Total: €{totalPrice.toFixed(2)}</h4>
+                        <h4>Total: €{totalPrice.toFixed(2)}</h4> {/* Display total price */}
                         <button className="btn btn-primary" onClick={handlePurchase}>
                             Proceed to Checkout
                         </button>

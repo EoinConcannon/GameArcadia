@@ -5,9 +5,10 @@ import { useCart } from '../contexts/CartContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const StorePage = () => {
-    const [products, setProducts] = useState([]);
-    const { addToCart } = useCart();
+    const [products, setProducts] = useState([]); // State to store the list of products
+    const { addToCart } = useCart(); // Hook to access cart context
 
+    // Fetch products from Supabase when the component displays
     useEffect(() => {
         const fetchProducts = async () => {
             const { data, error } = await supabase
@@ -18,12 +19,12 @@ const StorePage = () => {
                 console.error('Error fetching products:', error);
             } else {
                 console.log('Fetched products:', data);
-                setProducts(data);
+                setProducts(data); // Update state with fetched products
             }
         };
 
         fetchProducts();
-    }, []);
+    }, []); // Empty dependency array ensures this runs only once when the component displays
 
     return (
         <div className="store-page">

@@ -15,10 +15,11 @@ import Container from 'react-bootstrap/Container';
 import { CartProvider } from './contexts/CartContext';
 
 function App() {
-  const [loggedInUser, setLoggedInUser] = useState(null); //tracks if user logged in
+  const [loggedInUser, setLoggedInUser] = useState(null); // Track if a user is logged in
   const [users, setUsers] = useState([]); // Track users
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Hook to navigate to different pages
 
+  // Load logged-in user from local storage when the app starts
   useEffect(() => {
     const user = localStorage.getItem('loggedInUser');
     if (user) {
@@ -26,20 +27,23 @@ function App() {
     }
   }, []);
 
+  // Handle user logout
   const handleLogout = () => {
-    setLoggedInUser(null); //clear logged in user status
-    localStorage.removeItem('loggedInUser');
-    navigate('/');
+    setLoggedInUser(null); // Clear logged-in user status
+    localStorage.removeItem('loggedInUser'); // Remove user from local storage
+    navigate('/'); // Navigate to the home page
   };
 
-  // this is only temporary, will replace this with a database later
+  // Temporary function to add a new user (will be replaced with a database later)
+  // No longer functional after adding Supabase
   const addUser = (newUser) => {
     setUsers((prevUsers) => [...prevUsers, newUser]);
   };
 
   return (
     <CartProvider loggedInUser={loggedInUser}>
-      <div style={{ backgroundColor: 'black', color: 'white', minHeight: '100vh' }}>
+      <div className="app-container">
+        {/* Top Navbar */}
         <Navbar bg="light" data-bs-theme="light">
           <Container>
             <Navbar.Brand as={Link} to="/">GameArcadia</Navbar.Brand>
@@ -59,6 +63,9 @@ function App() {
             </Nav>
           </Container>
         </Navbar>
+
+        {/* Main Content */}
+        <div className="content">
           <Routes>
             <Route path="/" element={<FrontPage />} />
             <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
@@ -68,13 +75,18 @@ function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
-        <Navbar bg="light" data-bs-theme="light" fixed="bottom">
-          <Container>
-            <Nav className="ms-auto">
-              <Nav.Link as={Link} to="/about">About</Nav.Link>
-            </Nav>
-          </Container>
-        </Navbar>
+        </div>
+
+        {/* Bottom Navbar */}
+        <footer className="footer">
+          <Navbar bg="light" data-bs-theme="light">
+            <Container>
+              <Nav className="ms-auto">
+                <Nav.Link as={Link} to="/about">About</Nav.Link>
+              </Nav>
+            </Container>
+          </Navbar>
+        </footer>
       </div>
     </CartProvider>
   );
