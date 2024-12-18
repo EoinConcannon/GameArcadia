@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import FrontPage from './components/FrontPage';
 import StorePage from './components/StorePage';
@@ -19,8 +19,16 @@ function App() {
   const [users, setUsers] = useState([]); // Track users
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const user = localStorage.getItem('loggedInUser');
+    if (user) {
+      setLoggedInUser(JSON.parse(user));
+    }
+  }, []);
+
   const handleLogout = () => {
     setLoggedInUser(null); //clear logged in user status
+    localStorage.removeItem('loggedInUser');
     navigate('/');
   };
 
@@ -30,7 +38,7 @@ function App() {
   };
 
   return (
-    <CartProvider>
+    <CartProvider loggedInUser={loggedInUser}>
       <div style={{ backgroundColor: 'black', color: 'white', minHeight: '100vh' }}>
         <Navbar bg="light" data-bs-theme="light">
           <Container>
@@ -41,7 +49,7 @@ function App() {
             <Nav className="ms-auto">
               {loggedInUser ? (
                 <>
-                  <Nav.Link as={Link} to="/profile">{loggedInUser}</Nav.Link>
+                  <Nav.Link as={Link} to="/profile">{loggedInUser.username}</Nav.Link>
                   <Nav.Link as={Link} to="/cart">Shopping Cart</Nav.Link>
                   <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
                 </>

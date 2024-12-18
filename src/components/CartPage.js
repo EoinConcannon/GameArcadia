@@ -6,8 +6,6 @@ const CartPage = () => {
 
     const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
 
-    //Proceed to checkout button
-    //TODO: send user email on successful purchase
     const handlePurchase = () => {
         if (cartItems.length === 0) {
             alert('Your cart is empty!');

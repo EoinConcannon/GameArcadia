@@ -24,7 +24,8 @@ const LoginPage = ({ setLoggedInUser }) => {
             const user = users.find(u => u.username === username && u.password === password);
 
             if (user) {
-                setLoggedInUser(username);
+                setLoggedInUser(user);
+                localStorage.setItem('loggedInUser', JSON.stringify(user));
                 navigate('/'); // Redirect to home page after login
             } else {
                 setError('Invalid username or password');
