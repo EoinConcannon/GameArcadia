@@ -7,6 +7,7 @@ import LoginPage from './components/LoginPage';
 import ProfilePage from './components/ProfilePage';
 import SignUpPage from './components/SignUpPage';
 import AboutPage from './components/AboutPage';
+import AdminPage from './components/AdminPage';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Nav from 'react-bootstrap/Nav';
@@ -49,6 +50,9 @@ function App() {
             <Navbar.Brand as={Link} to="/">GameArcadia</Navbar.Brand>
             <Nav className="me-auto">
               <Nav.Link as={Link} to="/store">Store</Nav.Link>
+              {loggedInUser?.role === "admin" && (
+                <Nav.Link as={Link} to="/admin">Admin</Nav.Link>
+              )}
             </Nav>
             <Nav className="ms-auto">
               {loggedInUser ? (
@@ -74,6 +78,11 @@ function App() {
             <Route path="/store" element={<StorePage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/admin" element={loggedInUser?.role === "admin" ? (<AdminPage />) : (
+                  <div>You are not authorized to view this page.</div>
+                )
+              }
+            />
           </Routes>
         </div>
 
