@@ -79,7 +79,7 @@ function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/admin" element={loggedInUser?.role === "admin" ? (<AdminPage />) : (
-                  <div>You are not authorized to view this page.</div>
+                  <div>You are not authorized to view this page.</div> //if non-admin user enters admin in url
                 )
               }
             />

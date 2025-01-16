@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const CartContext = createContext();
 
@@ -8,11 +9,18 @@ export const useCart = () => {
 };
 
 // CartProvider component to provide cart context to its children
-export const CartProvider = ({ children }) => {
+export const CartProvider = ({ children, loggedInUser }) => {
     const [cartItems, setCartItems] = useState([]); // State to store cart items
+    const navigate = useNavigate();
 
     // Function to add an item to the cart
     const addToCart = (item) => {
+        // Redirect to login if logged out
+        if (!loggedInUser) {
+            navigate('/login');
+            return;
+        }
+
         const itemExists = cartItems.some((cartItem) => cartItem.id === item.id);
 
         if (itemExists) {
