@@ -1,39 +1,77 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase'; // Ensure your Supabase client is initialized
 
-const SignUpPage = ({ addUser }) => {
+const SignUpPage = () => {
     const navigate = useNavigate();
 
-    //this is temporary, will replace this with a database later
-    //generated with chatGPT
     const [userData, setUserData] = useState({
         username: '',
         email: '',
         password: '',
         confirmPassword: ''
     });
+
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setUserData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        setError('');
+        if (!userData.username || !userData.email || !userData.password) {
+            setError('All fields are required');
+            return;
+        }
+
         if (userData.password !== userData.confirmPassword) {
             setError('Passwords do not match');
             return;
         }
 
-        const newUser = {
-            username: userData.username,
-            email: userData.email,
-            password: userData.password,
-            role: 'user', // Default role
-        };
+        setLoading(true);
 
-        addUser(newUser); // Add new user to the users array
-        navigate('/login'); // Redirect to login page after signing up
+        try {
+            // Check if the email already exists in the database
+            const { data: existingUser, error: fetchError } = await supabase
+                .from('users')
+                .select('email')
+                .eq('email', userData.email);
+
+            if (fetchError) throw fetchError;
+
+            if (existingUser.length > 0) {
+                setError('Email is already in use');
+                setLoading(false);
+                return;
+            }
+
+            // Insert the new user into the `users` table
+            const { error: insertError } = await supabase.from('users').insert([
+                {
+                    username: userData.username,
+                    email: userData.email,
+                    password: userData.password, // Store plaintext for simplicity, but you should hash passwords
+                    role: 'user', // Default role
+                },
+            ]);
+
+            if (insertError) {
+                setError('Error creating account: ' + insertError.message);
+                setLoading(false);
+                return;
+            }
+
+            // Navigate to the login page on success
+            navigate('/login');
+        } catch (err) {
+            setError('An unexpected error occurred. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -86,7 +124,14 @@ const SignUpPage = ({ addUser }) => {
                         />
                     </div>
                     {error && <div className="alert alert-danger">{error}</div>}
-                    <button type="button" className="btn btn-primary w-100" onClick={handleSubmit}>Create Account</button>
+                    <button
+                        type="button"
+                        className="btn btn-primary w-100"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                    >
+                        {loading ? 'Creating Account...' : 'Create Account'}
+                    </button>
                 </form>
             </div>
         </div>
