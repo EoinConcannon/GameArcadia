@@ -1,20 +1,54 @@
 import React from 'react';
 import { useCart } from '../contexts/CartContext';
+import { supabase } from '../supabase';
 
-const CartPage = () => {
+const CartPage = ({ loggedInUser }) => {
     const { cartItems, removeFromCart, clearCart } = useCart(); // Access cart context
 
     // Calculate the total price of items in the cart
     const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
 
     // Handle purchase action
-    const handlePurchase = () => {
+    const handlePurchase = async () => {
+        if (!loggedInUser) {
+            alert('You must be logged in to make a purchase.');
+            return;
+        }
+
         if (cartItems.length === 0) {
             alert('Your cart is empty!');
             return;
         }
-        alert('Your purchase was successful.'); // Alert for successful purchase
-        clearCart(); // Clear the cart after purchase
+
+        try {
+            // Prepare the records for insertion
+            const inventoryItems = cartItems.map((item) => ({
+                user_id: loggedInUser.id, // Assuming `loggedInUser.id` is the user's UUID
+                game_id: item.id,         // The game's UUID
+                purchased_at: new Date(), // Current timestamp
+            }));
+
+            console.log('Inventory Items:', inventoryItems); // Log inventory items
+
+            // Insert records into the `user_inventory` table
+            const { data, error } = await supabase.from('user_inventory').insert(inventoryItems);
+
+            if (error) {
+                console.error('Error adding items to user_inventory:', error);
+                console.error('Supabase Error Details:', error.details); // Log detailed error information
+                console.error('Supabase Error Hint:', error.hint); // Log error hint
+                alert('There was an error processing your purchase.');
+                return;
+            }
+
+            console.log('Purchase Data:', data); // Log response data
+
+            alert('Your purchase was successful!');
+            clearCart(); // Clear the cart after a successful purchase
+        } catch (err) {
+            console.error('Unexpected error during purchase:', err);
+            alert('An unexpected error occurred.');
+        }
     };
 
     return (

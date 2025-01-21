@@ -75,8 +75,8 @@ function App() {
             <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
             <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} />} />
             <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
-            <Route path="/store" element={<StorePage />} />
-            <Route path="/cart" element={<CartPage />} />
+            <Route path="/store" element={<StorePage loggedInUser={loggedInUser} />} />
+            <Route path="/cart" element={<CartPage loggedInUser={loggedInUser} />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/admin" element={loggedInUser?.role === "admin" ? (<AdminPage loggedInUser={loggedInUser} />
             ) : (

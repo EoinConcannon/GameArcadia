@@ -4,7 +4,8 @@ import { Row, Col, Card, Button, Form } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const StorePage = () => {
+const StorePage = ({ loggedInUser }) => {
+    const [inventory, setInventory] = useState([]);
     const [products, setProducts] = useState([]); // State to store the list of products
     const [filteredProducts, setFilteredProducts] = useState([]); // State to store filtered list of products
     const [searchQuery, setSearchQuery] = useState(''); // State to track search query
@@ -29,6 +30,27 @@ const StorePage = () => {
         fetchProducts();
     }, []); // Empty dependency array ensures this runs only once when the component displays
 
+    // Fetch inventory from Supabase when the component displays
+    useEffect(() => {
+        const fetchInventory = async () => {
+            if (!loggedInUser) return;
+
+            const { data, error } = await supabase
+                .from('user_inventory')
+                .select('game_id')
+                .eq('user_id', loggedInUser.id);
+
+            if (error) {
+                console.error('Error fetching inventory:', error);
+                return;
+            }
+
+            setInventory(data.map((item) => item.game_id)); // Store game IDs of owned games
+        };
+
+        fetchInventory();
+    }, [loggedInUser]);
+
     // Handle search input change and filter products
     const handleSearchChange = (e) => {
         const query = e.target.value.toLowerCase(); // Convert search query to lowercase
@@ -40,6 +62,9 @@ const StorePage = () => {
         );
         setFilteredProducts(filtered); // Update state with filtered products
     };
+
+    // Check if a game is owned by the user
+    const isOwned = (gameId) => inventory.includes(gameId);
 
     return (
         <div className="store-page">
@@ -80,8 +105,9 @@ const StorePage = () => {
                                 <Button
                                     variant="primary"
                                     onClick={() => addToCart(product)}
+                                    disabled={isOwned(product.id)} // Disable button if the game is owned
                                 >
-                                    Add to Cart
+                                    {isOwned(product.id) ? 'Owned' : 'Add to Cart'}
                                 </Button>
                             </Card.Body>
                         </Card>
