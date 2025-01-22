@@ -217,7 +217,6 @@ const AdminPage = ({ loggedInUser }) => {
                             className="form-control"
                             value={newGame.description}
                             onChange={handleInputChange}
-                            required
                         />
                     </div>
                     <div className="mb-3">
