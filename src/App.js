@@ -8,6 +8,10 @@ import ProfilePage from './components/ProfilePage';
 import SignUpPage from './components/SignUpPage';
 import AboutPage from './components/AboutPage';
 import AdminPage from './components/AdminPage';
+import UserListPage from './components/UserListPage';
+import GameListPage from './components/GameListPage';
+import GameManagementPage from './components/GameManagementPage';
+import AdminRoute from './components/AdminRoute';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Nav from 'react-bootstrap/Nav';
@@ -78,13 +82,26 @@ function App() {
             <Route path="/store" element={<StorePage loggedInUser={loggedInUser} />} />
             <Route path="/cart" element={<CartPage loggedInUser={loggedInUser} />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="/admin" element={loggedInUser?.role === "admin" ? (<AdminPage loggedInUser={loggedInUser} />
-            ) : (
-              <div>You are not authorized to view this page.</div>
-            )
-            }
-            />
-
+            <Route path="/admin" element={
+              <AdminRoute loggedInUser={loggedInUser}>
+                <AdminPage loggedInUser={loggedInUser} />
+              </AdminRoute>
+            } />
+            <Route path="/user-list" element={
+              <AdminRoute loggedInUser={loggedInUser}>
+                <UserListPage loggedInUser={loggedInUser} />
+              </AdminRoute>
+            } />
+            <Route path="/game-list" element={
+              <AdminRoute loggedInUser={loggedInUser}>
+                <GameListPage loggedInUser={loggedInUser} />
+              </AdminRoute>
+            } />
+            <Route path="/game-management" element={
+              <AdminRoute loggedInUser={loggedInUser}>
+                <GameManagementPage loggedInUser={loggedInUser} />
+              </AdminRoute>
+            } />
           </Routes>
         </div>
 

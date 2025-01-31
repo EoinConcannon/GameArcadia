@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 
 const AdminPage = ({ loggedInUser }) => {
@@ -12,6 +13,8 @@ const AdminPage = ({ loggedInUser }) => {
     const [editGame, setEditGame] = useState(null); // State to track the game being edited
     const [error, setError] = useState(null); // State to handle errors
     const [message, setMessage] = useState(''); // State for success or error messages
+
+    const navigate = useNavigate(); // Hook to navigate to different pages
 
     // Fetch users and games from Supabase
     useEffect(() => {
@@ -103,6 +106,19 @@ const AdminPage = ({ loggedInUser }) => {
             <h2>Admin Page</h2>
             {error && <p className="text-danger">{error}</p>}
             {message && <p className="text-success">{message}</p>}
+
+            {/* Navigation Buttons */}
+            <div className="admin-navigation-buttons mb-4">
+                <button className="btn btn-primary me-2" onClick={() => navigate('/user-list')}>
+                    User List
+                </button>
+                <button className="btn btn-primary me-2" onClick={() => navigate('/game-list')}>
+                    Game List
+                </button>
+                <button className="btn btn-primary" onClick={() => navigate('/game-management')}>
+                    Game Management
+                </button>
+            </div>
 
             {/* User List */}
             <div className="users-list mb-5">
