@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 
 const AdminPage = ({ loggedInUser }) => {
-    const [users, setUsers] = useState([]); // State to store users
     const [games, setGames] = useState([]); // State to store games
     const [newGame, setNewGame] = useState({
         name: '',
@@ -21,13 +20,6 @@ const AdminPage = ({ loggedInUser }) => {
         const fetchData = async () => {
             if (loggedInUser?.role === 'admin') {
                 try {
-                    // Fetch users
-                    const { data: userData, error: userError } = await supabase
-                        .from('users')
-                        .select('username, email, role');
-                    if (userError) throw userError;
-                    setUsers(userData);
-
                     // Fetch games
                     const { data: gameData, error: gameError } = await supabase
                         .from('games')
@@ -118,25 +110,6 @@ const AdminPage = ({ loggedInUser }) => {
                 <button className="btn btn-primary" onClick={() => navigate('/game-management')}>
                     Game Management
                 </button>
-            </div>
-
-            {/* User List */}
-            <div className="users-list mb-5">
-                <h3>List of Users</h3>
-                {users.length > 0 ? (
-                    <ul>
-                        {users.map((user, index) => (
-                            <li key={index}>
-                                <strong>{user.username}</strong> - {user.email}{' '}
-                                {user.role === 'admin' && (
-                                    <span style={{ color: 'red', fontWeight: 'bold' }}> (Admin)</span>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>No users found.</p>
-                )}
             </div>
 
             {/* List of Games */}
