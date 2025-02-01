@@ -110,6 +110,9 @@ const AdminPage = ({ loggedInUser }) => {
                 <button className="btn btn-primary" onClick={() => navigate('/game-management')}>
                     Game Management
                 </button>
+                <button className="btn btn-primary" onClick={() => navigate('/user-management')}>
+                    User Management
+                </button>
             </div>
 
             {/* List of Games */}

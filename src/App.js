@@ -11,6 +11,7 @@ import AdminPage from './components/AdminPage';
 import UserListPage from './components/UserListPage';
 import GameListPage from './components/GameListPage';
 import GameManagementPage from './components/GameManagementPage';
+import UserManagementPage from './components/UserManagementPage';
 import AdminRoute from './components/AdminRoute';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -100,6 +101,11 @@ function App() {
             <Route path="/game-management" element={
               <AdminRoute loggedInUser={loggedInUser}>
                 <GameManagementPage loggedInUser={loggedInUser} />
+              </AdminRoute>
+            } />
+            <Route path="/user-management" element={
+              <AdminRoute loggedInUser={loggedInUser}>
+                <UserManagementPage loggedInUser={loggedInUser} />
               </AdminRoute>
             } />
           </Routes>
