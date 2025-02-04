@@ -9,7 +9,6 @@ import SignUpPage from './components/SignUpPage';
 import AboutPage from './components/AboutPage';
 import AdminPage from './components/AdminPage';
 import UserListPage from './components/UserListPage';
-import GameListPage from './components/GameListPage';
 import GameManagementPage from './components/GameManagementPage';
 import UserManagementPage from './components/UserManagementPage';
 import AdminRoute from './components/AdminRoute';
@@ -91,11 +90,6 @@ function App() {
             <Route path="/user-list" element={
               <AdminRoute loggedInUser={loggedInUser}>
                 <UserListPage loggedInUser={loggedInUser} />
-              </AdminRoute>
-            } />
-            <Route path="/game-list" element={
-              <AdminRoute loggedInUser={loggedInUser}>
-                <GameListPage loggedInUser={loggedInUser} />
               </AdminRoute>
             } />
             <Route path="/game-management" element={
