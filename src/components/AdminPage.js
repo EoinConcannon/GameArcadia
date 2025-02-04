@@ -16,9 +16,6 @@ const AdminPage = ({ loggedInUser }) => {
 
             {/* Navigation Buttons */}
             <div className="admin-navigation-buttons mb-4">
-                <button className="btn btn-primary me-2" onClick={() => navigate('/user-list')}>
-                    User List
-                </button>
                 <button className="btn btn-primary me-2" onClick={() => navigate('/game-management')}>
                     Game Management
                 </button>
