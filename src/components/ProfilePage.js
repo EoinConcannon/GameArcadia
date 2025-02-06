@@ -39,6 +39,21 @@ const ProfilePage = ({ loggedInUser }) => {
 
     return (
         <div className="profile-page container my-5">
+            {/* User Information Section */}
+            {/* Temporarly using this before allowing user to edit their information */}
+            <div className="user-info mb-4">
+                <h2 className="text-center mb-4">User Information</h2>
+                <Card>
+                    <Card.Body>
+                        <Card.Title>{loggedInUser.username}</Card.Title>
+                        <Card.Text>Email: {loggedInUser.email}</Card.Text>
+                        <Card.Text>Password: ********</Card.Text> {/* Won't be displaying this */}
+                        <Card.Text>Role: {loggedInUser.role}</Card.Text>
+                        <Card.Text>Joined: {new Date(loggedInUser.created_at).toLocaleString()}</Card.Text>
+                    </Card.Body>
+                </Card>
+            </div>
+
             <h2 className="text-center mb-4">{loggedInUser.username}'s Inventory</h2>
             {inventory.length === 0 ? (
                 <p className="text-center">Your inventory is empty.</p>
