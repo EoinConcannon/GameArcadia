@@ -53,25 +53,32 @@ const ProfilePage = ({ loggedInUser }) => {
                     </Card.Body>
                 </Card>
             </div>
+            <div className="text-center mt-4">
+                <button className="btn btn-danger">
+                    Delete Account
+                </button>
+            </div>
 
-            <h2 className="text-center mb-4">{loggedInUser.username}'s Inventory</h2>
-            {inventory.length === 0 ? (
-                <p className="text-center">Your inventory is empty.</p>
-            ) : (
-                <Row xs={1} sm={2} md={3} className="g-4">
-                    {inventory.map((item) => (
-                        <Col key={item.game_id}>
-                            <Card>
-                                <Card.Body>
-                                    <Card.Title>{item.games.name}</Card.Title>
-                                    <Card.Text>{item.games.description}</Card.Text>
-                                    <Card.Text>€{item.games.price}</Card.Text>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    ))}
-                </Row>
-            )}
+            <div className="mt-5">
+                <h2 className="text-center mb-4">{loggedInUser.username}'s Inventory</h2>
+                {inventory.length === 0 ? (
+                    <p className="text-center">Your inventory is empty.</p>
+                ) : (
+                    <Row xs={1} sm={2} md={3} className="g-4">
+                        {inventory.map((item) => (
+                            <Col key={item.game_id}>
+                                <Card>
+                                    <Card.Body>
+                                        <Card.Title>{item.games.name}</Card.Title>
+                                        <Card.Text>{item.games.description}</Card.Text>
+                                        <Card.Text>€{item.games.price}</Card.Text>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        ))}
+                    </Row>
+                )}
+            </div>
         </div>
     );
 };
