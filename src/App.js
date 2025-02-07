@@ -76,7 +76,7 @@ function App() {
           <Routes>
             <Route path="/" element={<FrontPage />} />
             <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
-            <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} />} />
+            <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} setLoggedInUser={setLoggedInUser} />} />
             <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
             <Route path="/store" element={<StorePage loggedInUser={loggedInUser} />} />
             <Route path="/cart" element={<CartPage loggedInUser={loggedInUser} />} />
