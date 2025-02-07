@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
-import { Card, Row, Col } from 'react-bootstrap';
+import { Card, Row, Col, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
     const [inventory, setInventory] = useState([]);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+
+    // State to control editing mode and hold the editable user data
+    const [editing, setEditing] = useState(false);
+    const [editUserData, setEditUserData] = useState({
+        username: '',
+        email: '',
+    });
 
     // Fetch user inventory from Supabase
     useEffect(() => {
@@ -35,6 +42,16 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
         };
 
         fetchInventory();
+    }, [loggedInUser]);
+
+    // Update editUserData when loggedInUser changes
+    useEffect(() => {
+        if (loggedInUser) {
+            setEditUserData({
+                username: loggedInUser.username,
+                email: loggedInUser.email,
+            });
+        }
     }, [loggedInUser]);
 
     // Handle account deletion
@@ -73,6 +90,44 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
         navigate('/');
     };
 
+    const handleSave = async () => {
+        // Update the user's information in the 'users' table (except password)
+        const { data, error } = await supabase
+            .from('users')
+            .update({
+                username: editUserData.username,
+                email: editUserData.email,
+            })
+            .eq('id', loggedInUser.id)
+            .select(); // <-- This ensures the updated record is returned
+
+        if (error) {
+            console.error('Error updating user info:', error);
+            alert("Failed to update your information. Please try again later.");
+            return;
+        }
+
+        // Check if updated data is returned
+        if (data && data.length > 0) {
+            // Merge the updated fields with the existing loggedInUser object
+            const updatedUser = { ...loggedInUser, ...data[0] };
+            localStorage.setItem('loggedInUser', JSON.stringify(updatedUser));
+            setLoggedInUser(updatedUser);
+            setEditing(false);
+        } else {
+            alert("Failed to update your information. Please try again later.");
+        }
+    };
+
+    // Handle cancel editing: revert changes
+    const handleCancel = () => {
+        setEditUserData({
+            username: loggedInUser.username,
+            email: loggedInUser.email,
+        });
+        setEditing(false);
+    };
+
     if (!loggedInUser) {
         return <p className="text-center">Please log in to view your profile.</p>;
     }
@@ -84,15 +139,59 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                 <h2 className="text-center mb-4">User Information</h2>
                 <Card>
                     <Card.Body>
-                        <Card.Title>{loggedInUser.username}</Card.Title>
-                        <Card.Text>Email: {loggedInUser.email}</Card.Text>
-                        <Card.Text>Password: ********</Card.Text>
-                        <Card.Text>Role: {loggedInUser.role}</Card.Text>
-                        <Card.Text>
-                            Joined: {new Date(loggedInUser.created_at).toLocaleString()}
-                        </Card.Text>
+                        {editing ? (
+                            <Form>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Username</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={editUserData.username}
+                                        onChange={(e) =>
+                                            setEditUserData({ ...editUserData, username: e.target.value })
+                                        }
+                                    />
+                                </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Email</Form.Label>
+                                    <Form.Control
+                                        type="email"
+                                        value={editUserData.email}
+                                        onChange={(e) =>
+                                            setEditUserData({ ...editUserData, email: e.target.value })
+                                        }
+                                    />
+                                </Form.Group>
+                            </Form>
+                        ) : (
+                            <>
+                                <Card.Title>{loggedInUser.username}</Card.Title>
+                                <Card.Text>Email: {loggedInUser.email}</Card.Text>
+                                <Card.Text>Password: ********</Card.Text>
+                                <Card.Text>Role: {loggedInUser.role}</Card.Text>
+                                <Card.Text>
+                                    Joined: {new Date(loggedInUser.created_at).toLocaleString()}
+                                </Card.Text>
+                            </>
+                        )}
                     </Card.Body>
                 </Card>
+                {/* Edit Mode Buttons */}
+                <div className="text-center mt-4">
+                    {!editing ? (
+                        <Button variant="primary" onClick={() => setEditing(true)}>
+                            Edit
+                        </Button>
+                    ) : (
+                        <>
+                            <Button variant="success" onClick={handleSave} className="me-2">
+                                Save
+                            </Button>
+                            <Button variant="secondary" onClick={handleCancel}>
+                                Cancel
+                            </Button>
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* Display error message if there is an error */}
@@ -104,7 +203,9 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                     className="btn btn-danger"
                     onClick={handleDeleteAccount}
                     disabled={loggedInUser.role === 'admin'}
-                > Delete Account </button>
+                >
+                    Delete Account
+                </button>
             </div>
 
             {/* Inventory Section */}
