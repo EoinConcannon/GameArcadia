@@ -1,17 +1,18 @@
 import React from 'react';
 import { useCart } from '../contexts/CartContext';
-import { supabase } from '../supabase';
+import { useNavigate } from 'react-router-dom';
 
 const CartPage = ({ loggedInUser }) => {
     const { cartItems, removeFromCart, clearCart } = useCart(); // Access cart context
+    const navigate = useNavigate(); // Hook to navigate to different pages
 
     // Calculate the total price of items in the cart
     const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
 
-    // Handle purchase action
-    const handlePurchase = async () => {
+    // Handle proceed to checkout action
+    const handleProceedToCheckout = () => {
         if (!loggedInUser) {
-            alert('You must be logged in to make a purchase.');
+            alert('You must be logged in to proceed to checkout.');
             return;
         }
 
@@ -20,34 +21,14 @@ const CartPage = ({ loggedInUser }) => {
             return;
         }
 
-        try {
-            // Prepare the records for insertion
-            const inventoryItems = cartItems.map((item) => ({
-                user_id: loggedInUser.id, // Assuming `loggedInUser.id` is the user's UUID
-                game_id: item.id,         // The game's UUID
-                purchased_at: new Date(), // Current timestamp
-            }));
+        navigate('/checkout'); // Redirect to the checkout page
+    };
 
-            console.log('Inventory Items:', inventoryItems); // Log inventory items
-
-            // Insert records into the `user_inventory` table
-            const { data, error } = await supabase.from('user_inventory').insert(inventoryItems);
-
-            if (error) {
-                console.error('Error adding items to user_inventory:', error);
-                console.error('Supabase Error Details:', error.details); // Log detailed error information
-                console.error('Supabase Error Hint:', error.hint); // Log error hint
-                alert('There was an error processing your purchase.');
-                return;
-            }
-
-            console.log('Purchase Data:', data); // Log response data
-
-            alert('Your purchase was successful!');
-            clearCart(); // Clear the cart after a successful purchase
-        } catch (err) {
-            console.error('Unexpected error during purchase:', err);
-            alert('An unexpected error occurred.');
+    // Handle clear cart action with confirmation
+    const handleClearCart = () => {
+        const confirmed = window.confirm('Are you sure you want to clear your cart?');
+        if (confirmed) {
+            clearCart();
         }
     };
 
@@ -76,8 +57,11 @@ const CartPage = ({ loggedInUser }) => {
                     ))}
                     <div className="d-flex justify-content-between mt-4">
                         <h4>Total: €{totalPrice.toFixed(2)}</h4> {/* Display total price */}
-                        <button className="btn btn-primary" onClick={handlePurchase}>
+                        <button className="btn btn-primary" onClick={handleProceedToCheckout}>
                             Proceed to Checkout
+                        </button>
+                        <button className="btn btn-warning" onClick={handleClearCart}>
+                            Clear Cart
                         </button>
                     </div>
                 </div>

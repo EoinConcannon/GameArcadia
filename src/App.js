@@ -11,6 +11,7 @@ import AdminPage from './components/AdminPage';
 import GameManagementPage from './components/GameManagementPage';
 import UserManagementPage from './components/UserManagementPage';
 import AdminRoute from './components/AdminRoute';
+import CheckOutPage from './components/CheckOutPage';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Nav from 'react-bootstrap/Nav';
@@ -80,6 +81,7 @@ function App() {
             <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
             <Route path="/store" element={<StorePage loggedInUser={loggedInUser} />} />
             <Route path="/cart" element={<CartPage loggedInUser={loggedInUser} />} />
+            <Route path="/checkout" element={<CheckOutPage loggedInUser={loggedInUser} />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/admin" element={
               <AdminRoute loggedInUser={loggedInUser}>
