@@ -28,6 +28,7 @@ export const CartProvider = ({ children, loggedInUser }) => {
         }
 
         setCartItems((prevItems) => [...prevItems, item]); // Add item to cart
+        alert(`${item.name} has been added to your cart`); // Display alert message
     };
 
     // Function to remove an item from the cart

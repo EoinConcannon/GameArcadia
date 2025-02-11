@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../supabase';
 import { useNavigate } from 'react-router-dom';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import stripePromise from '../stripe';
 
-const CheckOutPage = ({ loggedInUser }) => {
-    const { cartItems, clearCart } = useCart(); // Access cart context
-    const navigate = useNavigate(); // Hook to navigate to different pages
+const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
+    const stripe = useStripe();
+    const elements = useElements();
+    const navigate = useNavigate();
+    const [error, setError] = useState(null);
+    const [processing, setProcessing] = useState(false);
 
-    // Handle purchase action
-    const handlePurchase = async () => {
+    const handlePurchase = async (event) => {
+        event.preventDefault();
+
         if (!loggedInUser) {
             alert('You must be logged in to make a purchase.');
             return;
@@ -19,47 +25,89 @@ const CheckOutPage = ({ loggedInUser }) => {
             return;
         }
 
+        setProcessing(true);
+
         try {
-            // Prepare the records for insertion
-            const inventoryItems = cartItems.map((item) => ({
-                user_id: loggedInUser.id, // Assuming `loggedInUser.id` is the user's UUID
-                game_id: item.id,         // The game's UUID
-                purchased_at: new Date(), // Current timestamp
-            }));
+            // Create a payment intent on the server
+            const response = await fetch('/create-payment-intent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ items: cartItems }),
+            });
 
-            console.log('Inventory Items:', inventoryItems); // Log inventory items
+            const { clientSecret } = await response.json();
 
-            // Insert records into the `user_inventory` table
-            const { data, error } = await supabase.from('user_inventory').insert(inventoryItems);
+            // Confirm the payment with Stripe
+            const result = await stripe.confirmCardPayment(clientSecret, {
+                payment_method: {
+                    card: elements.getElement(CardElement),
+                    billing_details: {
+                        email: loggedInUser.email,
+                    },
+                },
+            });
 
-            if (error) {
-                console.error('Error adding items to user_inventory:', error);
-                console.error('Supabase Error Details:', error.details); // Log detailed error information
-                console.error('Supabase Error Hint:', error.hint); // Log error hint
-                alert('There was an error processing your purchase.');
+            if (result.error) {
+                setError(result.error.message);
+                setProcessing(false);
                 return;
             }
 
-            console.log('Purchase Data:', data); // Log response data
+            if (result.paymentIntent.status === 'succeeded') {
+                // Prepare the records for insertion
+                const inventoryItems = cartItems.map((item) => ({
+                    user_id: loggedInUser.id,
+                    game_id: item.id,
+                    purchased_at: new Date(),
+                }));
 
-            alert('Your purchase was successful!');
-            clearCart(); // Clear the cart after a successful purchase
-            navigate('/'); // Redirect to the home page after purchase
+                // Insert records into the `user_inventory` table
+                const { data, error } = await supabase.from('user_inventory').insert(inventoryItems);
+
+                if (error) {
+                    console.error('Error adding items to user_inventory:', error);
+                    alert('There was an error processing your purchase.');
+                    setProcessing(false);
+                    return;
+                }
+
+                alert('Your purchase was successful!');
+                clearCart();
+                navigate('/');
+            }
         } catch (err) {
             console.error('Unexpected error during purchase:', err);
             alert('An unexpected error occurred.');
         }
+
+        setProcessing(false);
     };
+
+    return (
+        <form onSubmit={handlePurchase}>
+            <CardElement />
+            {error && <div className="text-danger mt-2">{error}</div>}
+            <button className="btn btn-primary mt-4" type="submit" disabled={!stripe || processing}>
+                {processing ? 'Processing...' : 'Confirm Purchase'}
+            </button>
+        </form>
+    );
+};
+
+const CheckOutPage = ({ loggedInUser }) => {
+    const { cartItems, clearCart } = useCart();
 
     return (
         <div className="checkout-page container my-5">
             <h2 className="text-center mb-4">Checkout</h2>
             <div className="d-flex justify-content-between mt-4">
                 <h4>Total: €{cartItems.reduce((total, item) => total + item.price, 0).toFixed(2)}</h4>
-                <button className="btn btn-primary" onClick={handlePurchase}>
-                    Confirm Purchase
-                </button>
             </div>
+            <Elements stripe={stripePromise}>
+                <CheckoutForm loggedInUser={loggedInUser} cartItems={cartItems} clearCart={clearCart} />
+            </Elements>
         </div>
     );
 };
