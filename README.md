@@ -2,6 +2,59 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Installation Guide
+
+### Prerequisites
+
+Before you begin, ensure you have met the following requirements:
+- You have installed [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/).
+- You have a Stripe account and have obtained your API keys.
+
+### Installing
+
+1. **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/gamearcadia.git
+    cd gamearcadia
+    ```
+
+2. **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3. **Set up environment variables:**
+    Create a [.env](http://_vscodecontentref_/2) file in the root of your project and add your environment variables:
+    ```plaintext
+    REACT_APP_STRIPE_PUBLISHABLE_KEY=your-publishable-key-here
+    STRIPE_SECRET_KEY=your-secret-key-here
+    ```
+
+4. **Start the server:**
+    If you are using a serverless function, deploy it using Vercel or another platform. If you are using a Node.js server, run:
+    ```bash
+    node server.js
+    ```
+
+### Running the Application
+
+1. **Start the development server:**
+    ```bash
+    npm start
+    ```
+
+    Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+    The page will reload when you make changes.\
+    You may also see any lint errors in the console.
+
+### Running Tests
+
+Launch the test runner in the interactive watch mode:
+```bash
+npm test
+```
+
 ## Available Scripts
 
 In the project directory, you can run:
