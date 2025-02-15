@@ -75,7 +75,7 @@ function App() {
         {/* Main Content */}
         <div className="content">
           <Routes>
-            <Route path="/" element={<FrontPage />} />
+            <Route path="/" element={<FrontPage loggedInUser={loggedInUser} />} />
             <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
             <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} setLoggedInUser={setLoggedInUser} />} />
             <Route path="/signup" element={<SignUpPage addUser={addUser} />} />

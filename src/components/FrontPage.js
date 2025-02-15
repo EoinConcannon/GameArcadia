@@ -3,8 +3,9 @@ import { supabase } from '../supabase';
 import { Card, Button } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
 
-const FrontPage = () => {
+const FrontPage = ({ loggedInUser }) => {
     const [randomGame, setRandomGame] = useState(null); // State to store the random game
+    const [inventory, setInventory] = useState([]); // State to store user's inventory
     const { addToCart } = useCart(); // Hook to access cart context
 
     // Fetch games from Supabase and select a random game
@@ -24,6 +25,30 @@ const FrontPage = () => {
 
         fetchRandomGame();
     }, []); // Run once when the component mounts
+
+    // Fetch inventory from Supabase when the component displays
+    useEffect(() => {
+        const fetchInventory = async () => {
+            if (!loggedInUser) return;
+
+            const { data, error } = await supabase
+                .from('user_inventory')
+                .select('game_id')
+                .eq('user_id', loggedInUser.id);
+
+            if (error) {
+                console.error('Error fetching inventory:', error);
+                return;
+            }
+
+            setInventory(data.map((item) => item.game_id)); // Store game IDs of owned games
+        };
+
+        fetchInventory();
+    }, [loggedInUser]);
+
+    // Check if a game is owned by the user
+    const isOwned = (gameId) => inventory.includes(gameId);
 
     if (!randomGame) {
         return <p>Loading featured game...</p>; // Display loading message until game is fetched
@@ -48,8 +73,9 @@ const FrontPage = () => {
                     <Button
                         variant="primary"
                         onClick={() => addToCart(randomGame)}
+                        disabled={isOwned(randomGame.id)} // Disable button if the game is owned
                     >
-                        Add to Cart
+                        {isOwned(randomGame.id) ? 'Owned' : 'Add to Cart'}
                     </Button>
                 </Card.Body>
             </Card>
