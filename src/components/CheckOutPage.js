@@ -28,8 +28,8 @@ const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
         setProcessing(true);
 
         try {
-            // Create a payment intent on the server
-            const response = await fetch('/create-payment-intent', {
+            // Create a payment intent using the server
+            const response = await fetch('http://localhost:3001/api/create-payment-intent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,7 +87,21 @@ const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
 
     return (
         <form onSubmit={handlePurchase}>
-            <CardElement />
+            <CardElement
+                options={{
+                    style: {
+                        base: {
+                            color: '#ffffff', // Set the text color to white
+                            '::placeholder': {
+                                color: '#aab7c4', // Set the placeholder color
+                            },
+                        },
+                        invalid: {
+                            color: '#fa755a', // Set the text color for invalid input
+                        },
+                    },
+                }}
+            />
             {error && <div className="text-danger mt-2">{error}</div>}
             <button className="btn btn-primary mt-4" type="submit" disabled={!stripe || processing}>
                 {processing ? 'Processing...' : 'Confirm Purchase'}
