@@ -8,7 +8,9 @@ import { supabase } from '../supabase';
 // Mock the supabase client
 jest.mock('../supabase', () => ({
     supabase: {
-        from: jest.fn(),
+        from: jest.fn(() => ({
+            select: jest.fn(),
+        })),
     },
 }));
 
