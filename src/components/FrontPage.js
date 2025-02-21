@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
-import { Card, Button } from 'react-bootstrap';
+import { Card, Button, Form } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
 
 const FrontPage = ({ loggedInUser }) => {
@@ -57,6 +57,22 @@ const FrontPage = ({ loggedInUser }) => {
     return (
         <div className="front-page text-center my-4">
             <h2>Welcome to GameArcadia</h2>
+            {/* Search Bar */}
+            <div className="search-bar text-center mb-4">
+                <Form>
+                    <Form.Control
+                        type="text"
+                        placeholder="Search for a game..."
+                        //value={searchQuery}
+                        //onChange={handleSearchChange}
+                        style={{
+                            maxWidth: '400px',
+                            margin: '0 auto',
+                            textAlign: 'center',
+                        }}
+                    />
+                </Form>
+            </div>
             <h4 className="mb-4">Featured Game</h4>
             <Card className="mx-auto" style={{ maxWidth: '400px' }}>
                 <Card.Img
@@ -79,6 +95,12 @@ const FrontPage = ({ loggedInUser }) => {
                     </Button>
                 </Card.Body>
             </Card>
+            <h4 className="my-4">Top Games</h4>
+            <p>Sample text</p>
+
+            <h4 className="my-4">Recommended Games</h4>
+            <p>Sample text</p>
+
         </div>
     );
 };

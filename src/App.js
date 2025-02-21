@@ -48,7 +48,7 @@ function App() {
   return (
     <CartProvider loggedInUser={loggedInUser}>
       <div className="app-container">
-        {/* Top Navbar */}
+        {/* Header */}
         <Navbar bg="light" data-bs-theme="light">
           <Container>
             <Navbar.Brand as={Link} to="/">GameArcadia</Navbar.Brand>
@@ -62,7 +62,7 @@ function App() {
               {loggedInUser ? (
                 <>
                   <Nav.Link as={Link} to="/profile">{loggedInUser.username}</Nav.Link>
-                  <Nav.Link as={Link} to="/cart">Shopping Cart</Nav.Link>
+                  <Nav.Link as={Link} to="/cart">Cart</Nav.Link>
                   <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
                 </>
               ) : (
@@ -101,7 +101,7 @@ function App() {
           </Routes>
         </div>
 
-        {/* Bottom Navbar */}
+        {/* Footer */}
         <footer className="footer">
           <Navbar bg="light" data-bs-theme="light">
             <Container>
