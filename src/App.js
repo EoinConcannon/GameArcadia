@@ -49,7 +49,7 @@ function App() {
     <CartProvider loggedInUser={loggedInUser}>
       <div className="app-container">
         {/* Header */}
-        <Navbar bg="light" data-bs-theme="light">
+        <Navbar bg="dark" variant="dark" className="app-header">
           <Container>
             <Navbar.Brand as={Link} to="/">GameArcadia</Navbar.Brand>
             <Nav className="me-auto">
@@ -103,7 +103,7 @@ function App() {
 
         {/* Footer */}
         <footer className="footer">
-          <Navbar bg="light" data-bs-theme="light">
+          <Navbar bg="dark" variant="dark" className="app-footer">
             <Container>
               <Nav className="ms-auto">
                 <Nav.Link as={Link} to="/about">About</Nav.Link>

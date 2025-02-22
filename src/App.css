@@ -12,8 +12,9 @@ html, body {
 }
 
 body {
-  background-color: black;
-  color: white; 
+  background-color: #1d0b27; /* Deep Purple Background */
+  color: #d3a4ff; /* Soft Neon Glow Text */
+  font-family: 'Arial', sans-serif;
 }
 
 .App-logo {
@@ -28,23 +29,24 @@ body {
 }
 
 .App-header {
-  background-color: #1e1e1e;
-  min-height: 100vh;
+  background-color: #3b0a45; /* Dark Violet */
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: #e0e0e0;
+  color: #d3a4ff; /* Soft Neon Glow Text */
+  box-shadow: 0 0 10px #561a70; /* Rich Magenta Shadow */
 }
 
 .App-link {
-  color: #bb86fc;
+  color: #8a2be2; /* Electric Violet */
   text-decoration: none;
 }
 
 .App-link:hover {
-  color: #03dac6;
+  color: #a14fdd; /* Neon Pink Hover */
 }
 
 @keyframes App-logo-spin {
@@ -87,5 +89,10 @@ button:hover {
 }
 
 .footer {
+  background-color: #3b0a45; /* Dark Violet */
+  color: #d3a4ff; /* Soft Neon Glow Text */
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 0 10px #561a70; /* Rich Magenta Shadow */
   flex-shrink: 0;
 }

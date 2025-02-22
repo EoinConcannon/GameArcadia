@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { Card, Button, Form } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
+import '../styles/FrontPage.css';
 
 const FrontPage = ({ loggedInUser }) => {
     const [randomGame, setRandomGame] = useState(null); // State to store the random game
@@ -55,52 +56,46 @@ const FrontPage = ({ loggedInUser }) => {
     }
 
     return (
-        <div className="front-page text-center my-4">
+        <div className="front-page">
             <h2>Welcome to GameArcadia</h2>
             {/* Search Bar */}
-            <div className="search-bar text-center mb-4">
+            <div className="search-bar">
                 <Form>
                     <Form.Control
                         type="text"
                         placeholder="Search for a game..."
                         //value={searchQuery}
                         //onChange={handleSearchChange}
-                        style={{
-                            maxWidth: '400px',
-                            margin: '0 auto',
-                            textAlign: 'center',
-                        }}
                     />
                 </Form>
             </div>
-            <h4 className="mb-4">Featured Game</h4>
-            <Card className="mx-auto" style={{ maxWidth: '400px' }}>
+            <h4 className="section-title">Featured Game</h4>
+            <Card className="card">
                 <Card.Img
                     variant="top"
                     src={randomGame.image_url || 'default-image-url'} // Replace with actual image URL field
                     alt={randomGame.name}
                     className="img-fluid"
-                    style={{ maxHeight: '200px', objectFit: 'cover' }}
                 />
                 <Card.Body>
-                    <Card.Title>{randomGame.name}</Card.Title>
-                    <Card.Text>{randomGame.description}</Card.Text>
-                    <Card.Text>€{randomGame.price}</Card.Text>
+                    <Card.Title className="card-title">{randomGame.name}</Card.Title>
+                    <Card.Text className="card-text">{randomGame.description}</Card.Text>
+                    <Card.Text className="card-text">€{randomGame.price}</Card.Text>
                     <Button
                         variant="primary"
                         onClick={() => addToCart(randomGame)}
                         disabled={isOwned(randomGame.id)} // Disable button if the game is owned
+                        className="card-button"
                     >
                         {isOwned(randomGame.id) ? 'Owned' : 'Add to Cart'}
                     </Button>
                 </Card.Body>
             </Card>
-            <h4 className="my-4">Top Games</h4>
+            <h4 className="section-title">Recommended Games</h4>
             <p>Sample text</p>
 
-            <h4 className="my-4">Recommended Games</h4>
+            <h4 className="section-title">Top Games</h4>
             <p>Sample text</p>
-
         </div>
     );
 };
