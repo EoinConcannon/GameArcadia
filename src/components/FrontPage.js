@@ -78,7 +78,7 @@ const FrontPage = ({ loggedInUser }) => {
                     alt={randomGame.name}
                     className="img-fluid"
                 />
-                <Card.Body>
+                <Card.Body className="card-body">
                     <Card.Title className="card-title">{randomGame.name}</Card.Title>
                     <Card.Text className="card-text">{randomGame.description_raw}</Card.Text>
                     <Card.Text className="card-text">Rating: {randomGame.rating}</Card.Text>
@@ -103,7 +103,7 @@ const FrontPage = ({ loggedInUser }) => {
                             alt={game.name}
                             className="img-fluid"
                         />
-                        <Card.Body>
+                        <Card.Body className="card-body">
                             <Card.Title className="card-title">{game.name}</Card.Title>
                             <Card.Text className="card-text">{game.description_raw}</Card.Text>
                             <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
@@ -130,7 +130,7 @@ const FrontPage = ({ loggedInUser }) => {
                             alt={game.name}
                             className="img-fluid"
                         />
-                        <Card.Body>
+                        <Card.Body className="card-body">
                             <Card.Title className="card-title">{game.name}</Card.Title>
                             <Card.Text className="card-text">{game.description_raw}</Card.Text>
                             <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
