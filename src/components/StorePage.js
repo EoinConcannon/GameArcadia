@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../supabase';
 import { Row, Col, Card, Button, Form } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import rawgService from '../rawgService';
+import { supabase } from '../supabase';
 
 const StorePage = ({ loggedInUser }) => {
     const [inventory, setInventory] = useState([]);
@@ -11,24 +12,20 @@ const StorePage = ({ loggedInUser }) => {
     const [searchQuery, setSearchQuery] = useState(''); // State to track search query
     const { addToCart } = useCart(); // Hook to access cart context
 
-    // Fetch products from Supabase when the component displays
+    // Fetch products from RAWG API when the component displays
     useEffect(() => {
         const fetchProducts = async () => {
-            const { data, error } = await supabase
-                .from('games')
-                .select('*');
-
-            if (error) {
-                console.error('Error fetching products:', error);
-            } else {
-                console.log('Fetched products:', data);
-                setProducts(data); // Update state with fetched products
-                setFilteredProducts(data); // Initialize filtered products with all products
+            try {
+                const games = await rawgService.getGames();
+                setProducts(games); // Update state with fetched products
+                setFilteredProducts(games); // Initialize filtered products with all products
+            } catch (error) {
+                console.error('Error fetching products from RAWG API:', error);
             }
         };
 
         fetchProducts();
-    }, []); // Empty dependency array ensures this runs only once when the component displays
+    }, []);
 
     // Fetch inventory from Supabase when the component displays
     useEffect(() => {
@@ -93,15 +90,15 @@ const StorePage = ({ loggedInUser }) => {
                         <Card>
                             <Card.Img
                                 variant="top"
-                                src={product.image_url || 'default-image-url'} // Replace with actual image URL field
+                                src={product.background_image || 'default-image-url'} // Replace with actual image URL field
                                 alt={product.name}
                                 className="img-fluid"
                                 style={{ maxHeight: '200px', objectFit: 'cover' }}
                             />
                             <Card.Body>
                                 <Card.Title>{product.name}</Card.Title>
-                                <Card.Text>{product.description}</Card.Text>
-                                <Card.Text>€{product.price}</Card.Text>
+                                <Card.Text>{product.description_raw}</Card.Text>
+                                <Card.Text>Rating: {product.rating}</Card.Text>
                                 <Button
                                     variant="primary"
                                     onClick={() => addToCart(product)}
