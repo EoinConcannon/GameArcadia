@@ -29,7 +29,6 @@ body {
 }
 
 .card {
-    max-width: 500px; /* Increased width */
     margin: 0 auto;
     background-color: #3b0a45; /* Dark Violet */
     border: none;
@@ -63,7 +62,7 @@ body {
 }
 
 .card .card-body .card-title {
-    color: #ffffff;
+    color: #ffffff; /* Having issues with title colour, using this to fix  */
 }
 
 .card-button {

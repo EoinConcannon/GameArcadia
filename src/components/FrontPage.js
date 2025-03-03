@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
-import { Card, Button, Form } from 'react-bootstrap';
+import { Card, Button, Form, Row, Col } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
 import '../styles/FrontPage.css';
 import rawgService from '../rawgService';
@@ -17,8 +17,7 @@ const FrontPage = ({ loggedInUser }) => {
         const fetchGames = async () => {
             try {
                 const games = await rawgService.getGames();
-                setRecommendedGames(games.slice(0, 4)); // Set the first 4 games as recommended games
-                setTopGames(games.slice(4, 8)); // Set the next 4 games as top games
+                setRecommendedGames(games.slice(0, 6)); // Set the first 6 games as recommended games
                 setRandomGame(games[Math.floor(Math.random() * games.length)]); // Set a random game
             } catch (error) {
                 console.error('Error fetching games from RAWG API:', error);
@@ -26,6 +25,20 @@ const FrontPage = ({ loggedInUser }) => {
         };
 
         fetchGames();
+    }, []);
+
+    // Fetch popular games from RAWG API
+    useEffect(() => {
+        const fetchPopularGames = async () => {
+            try {
+                const popularGames = await rawgService.getPopularGames();
+                setTopGames(popularGames.slice(0, 6)); // Set the first 6 popular games as top games
+            } catch (error) {
+                console.error('Error fetching popular games from RAWG API:', error);
+            }
+        };
+
+        fetchPopularGames();
     }, []);
 
     // Fetch inventory from Supabase when the component displays
@@ -94,58 +107,62 @@ const FrontPage = ({ loggedInUser }) => {
             </Card>
 
             <h4 className="section-title">Recommended Games</h4>
-            <div className="game-list">
+            <Row className="game-list">
                 {recommendedGames.map((game) => (
-                    <Card key={game.id} className="card">
-                        <Card.Img
-                            variant="top"
-                            src={game.background_image}
-                            alt={game.name}
-                            className="img-fluid"
-                        />
-                        <Card.Body className="card-body">
-                            <Card.Title className="card-title">{game.name}</Card.Title>
-                            <Card.Text className="card-text">{game.description_raw}</Card.Text>
-                            <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
-                            <Button
-                                variant="primary"
-                                onClick={() => addToCart(game)}
-                                disabled={isOwned(game.id)} // Disable button if the game is owned
-                                className="card-button"
-                            >
-                                {isOwned(game.id) ? 'Owned' : 'Add to Cart'}
-                            </Button>
-                        </Card.Body>
-                    </Card>
+                    <Col key={game.id} xs={12} sm={6} md={4} lg={3}>
+                        <Card className="card">
+                            <Card.Img
+                                variant="top"
+                                src={game.background_image}
+                                alt={game.name}
+                                className="img-fluid"
+                            />
+                            <Card.Body className="card-body">
+                                <Card.Title className="card-title">{game.name}</Card.Title>
+                                <Card.Text className="card-text">{game.description_raw}</Card.Text>
+                                <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
+                                <Button
+                                    variant="primary"
+                                    onClick={() => addToCart(game)}
+                                    disabled={isOwned(game.id)} // Disable button if the game is owned
+                                    className="card-button"
+                                >
+                                    {isOwned(game.id) ? 'Owned' : 'Add to Cart'}
+                                </Button>
+                            </Card.Body>
+                        </Card>
+                    </Col>
                 ))}
-            </div>
+            </Row>
 
             <h4 className="section-title">Top Games</h4>
-            <div className="game-list">
+            <Row className="game-list">
                 {topGames.map((game) => (
-                    <Card key={game.id} className="card">
-                        <Card.Img
-                            variant="top"
-                            src={game.background_image}
-                            alt={game.name}
-                            className="img-fluid"
-                        />
-                        <Card.Body className="card-body">
-                            <Card.Title className="card-title">{game.name}</Card.Title>
-                            <Card.Text className="card-text">{game.description_raw}</Card.Text>
-                            <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
-                            <Button
-                                variant="primary"
-                                onClick={() => addToCart(game)}
-                                disabled={isOwned(game.id)} // Disable button if the game is owned
-                                className="card-button"
-                            >
-                                {isOwned(game.id) ? 'Owned' : 'Add to Cart'}
-                            </Button>
-                        </Card.Body>
-                    </Card>
+                    <Col key={game.id} xs={12} sm={6} md={4} lg={3}>
+                        <Card className="card">
+                            <Card.Img
+                                variant="top"
+                                src={game.background_image}
+                                alt={game.name}
+                                className="img-fluid"
+                            />
+                            <Card.Body className="card-body">
+                                <Card.Title className="card-title">{game.name}</Card.Title>
+                                <Card.Text className="card-text">{game.description_raw}</Card.Text>
+                                <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
+                                <Button
+                                    variant="primary"
+                                    onClick={() => addToCart(game)}
+                                    disabled={isOwned(game.id)} // Disable button if the game is owned
+                                    className="card-button"
+                                >
+                                    {isOwned(game.id) ? 'Owned' : 'Add to Cart'}
+                                </Button>
+                            </Card.Body>
+                        </Card>
+                    </Col>
                 ))}
-            </div>
+            </Row>
         </div>
     );
 };
