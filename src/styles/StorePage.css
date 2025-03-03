@@ -1,0 +1,25 @@
+.store-page {
+    padding: 20px;
+}
+
+.game-card {
+    max-width: 250px; /* Adjust the max width to scale down the cards */
+    margin: 0 auto;
+}
+
+.game-card img {
+    max-height: 150px; /* Adjust the max height of the images */
+    object-fit: cover;
+}
+
+.game-card .card-body {
+    padding: 10px; /* Adjust padding for the card body */
+}
+
+.game-card .card-title {
+    font-size: 1.2rem; /* Adjust font size for the card title */
+}
+
+.game-card .card-text {
+    font-size: 0.9rem; /* Adjust font size for the card text */
+}

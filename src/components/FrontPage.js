@@ -12,12 +12,22 @@ const FrontPage = ({ loggedInUser }) => {
     const [topGames, setTopGames] = useState([]); // State to store top games
     const { addToCart } = useCart(); // Hook to access cart context
 
+    // Function to shuffle an array
+    const shuffleArray = (array) => {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    };
+
     // Fetch games from RAWG API
     useEffect(() => {
         const fetchGames = async () => {
             try {
                 const games = await rawgService.getGames();
-                setRecommendedGames(games.slice(0, 6)); // Set the first 6 games as recommended games
+                const shuffledGames = shuffleArray(games);
+                setRecommendedGames(shuffledGames.slice(0, 6)); // Set the first 6 shuffled games as recommended games
                 setRandomGame(games[Math.floor(Math.random() * games.length)]); // Set a random game
             } catch (error) {
                 console.error('Error fetching games from RAWG API:', error);

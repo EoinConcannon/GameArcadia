@@ -4,6 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import rawgService from '../rawgService';
 import { supabase } from '../supabase';
+import '../styles/StorePage.css'; // Import custom CSS
 
 const StorePage = ({ loggedInUser }) => {
     const [inventory, setInventory] = useState([]);
@@ -84,16 +85,15 @@ const StorePage = ({ loggedInUser }) => {
                 </Form>
             </div>
 
-            <Row xs={1} sm={2} md={2} lg={2} className="g-4">
+            <Row xs={1} sm={2} md={3} lg={4} className="g-4">
                 {filteredProducts.map((product) => (
                     <Col key={product.id}>
-                        <Card>
+                        <Card className="game-card">
                             <Card.Img
                                 variant="top"
                                 src={product.background_image || 'default-image-url'} // Replace with actual image URL field
                                 alt={product.name}
                                 className="img-fluid"
-                                style={{ maxHeight: '200px', objectFit: 'cover' }}
                             />
                             <Card.Body>
                                 <Card.Title>{product.name}</Card.Title>
