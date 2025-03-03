@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
-import { Card, Button, Form, Row, Col } from 'react-bootstrap';
+import { Card, Button, Form, Row, Col, ListGroup } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
 import '../styles/FrontPage.css';
 import rawgService from '../rawgService';
@@ -10,6 +10,8 @@ const FrontPage = ({ loggedInUser }) => {
     const [inventory, setInventory] = useState([]); // State to store user's inventory
     const [recommendedGames, setRecommendedGames] = useState([]); // State to store recommended games
     const [topGames, setTopGames] = useState([]); // State to store top games
+    const [searchQuery, setSearchQuery] = useState(''); // State to track search query
+    const [searchResults, setSearchResults] = useState([]); // State to store search results
     const { addToCart } = useCart(); // Hook to access cart context
 
     // Function to shuffle an array
@@ -75,6 +77,28 @@ const FrontPage = ({ loggedInUser }) => {
     // Check if a game is owned by the user
     const isOwned = (gameId) => inventory.includes(gameId);
 
+    // Handle search input change and filter games
+    const handleSearchChange = async (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        if (query.trim().length > 0) {
+            try {
+                const results = await rawgService.searchGames(query);
+                // Filter results to only include games whose name starts with the search query
+                const filteredResults = results.filter((game) =>
+                    game.name.toLowerCase().startsWith(query.toLowerCase())
+                );
+                setSearchResults(filteredResults);
+            } catch (error) {
+                console.error('Error searching games:', error);
+            }
+        } else {
+            setSearchResults([]);
+        }
+    };
+
+
     if (!randomGame) {
         return <p>Loading featured game...</p>; // Display loading message until game is fetched
     }
@@ -88,10 +112,19 @@ const FrontPage = ({ loggedInUser }) => {
                     <Form.Control
                         type="text"
                         placeholder="Search for a game..."
-                        //value={searchQuery}
-                        //onChange={handleSearchChange}
+                        value={searchQuery}
+                        onChange={handleSearchChange}
                     />
                 </Form>
+                {searchResults.length > 0 && (
+                    <ListGroup className="search-results">
+                        {searchResults.map((game) => (
+                            <ListGroup.Item key={game.id}>
+                                {game.name}
+                            </ListGroup.Item>
+                        ))}
+                    </ListGroup>
+                )}
             </div>
             <h4 className="section-title">Featured Game</h4>
             <Card className="card">
