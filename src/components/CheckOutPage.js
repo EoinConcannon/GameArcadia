@@ -64,7 +64,7 @@ const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
                 }));
 
                 // Insert records into the `user_inventory` table
-                const { data, error } = await supabase.from('user_inventory').insert(inventoryItems);
+                const { error } = await supabase.from('user_inventory').insert(inventoryItems);
 
                 if (error) {
                     console.error('Error adding items to user_inventory:', error);

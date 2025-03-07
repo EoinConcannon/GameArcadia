@@ -98,7 +98,6 @@ const FrontPage = ({ loggedInUser }) => {
         }
     };
 
-
     if (!randomGame) {
         return <p>Loading featured game...</p>; // Display loading message until game is fetched
     }
@@ -138,9 +137,10 @@ const FrontPage = ({ loggedInUser }) => {
                     <Card.Title className="card-title">{randomGame.name}</Card.Title>
                     <Card.Text className="card-text">{randomGame.description_raw}</Card.Text>
                     <Card.Text className="card-text">Rating: {randomGame.rating}</Card.Text>
+                    <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
                     <Button
                         variant="primary"
-                        onClick={() => addToCart(randomGame)}
+                        onClick={() => addToCart({ ...randomGame, price: 19.99 })} // Add price to game object
                         disabled={isOwned(randomGame.id)} // Disable button if the game is owned
                         className="card-button"
                     >
@@ -164,9 +164,10 @@ const FrontPage = ({ loggedInUser }) => {
                                 <Card.Title className="card-title">{game.name}</Card.Title>
                                 <Card.Text className="card-text">{game.description_raw}</Card.Text>
                                 <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
+                                <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
                                 <Button
                                     variant="primary"
-                                    onClick={() => addToCart(game)}
+                                    onClick={() => addToCart({ ...game, price: 19.99 })} // Add price to game object
                                     disabled={isOwned(game.id)} // Disable button if the game is owned
                                     className="card-button"
                                 >
@@ -193,9 +194,10 @@ const FrontPage = ({ loggedInUser }) => {
                                 <Card.Title className="card-title">{game.name}</Card.Title>
                                 <Card.Text className="card-text">{game.description_raw}</Card.Text>
                                 <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
+                                <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
                                 <Button
                                     variant="primary"
-                                    onClick={() => addToCart(game)}
+                                    onClick={() => addToCart({ ...game, price: 19.99 })} // Add price to game object
                                     disabled={isOwned(game.id)} // Disable button if the game is owned
                                     className="card-button"
                                 >

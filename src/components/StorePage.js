@@ -8,24 +8,24 @@ import '../styles/StorePage.css'; // Import custom CSS
 
 const StorePage = ({ loggedInUser }) => {
     const [inventory, setInventory] = useState([]);
-    const [products, setProducts] = useState([]); // State to store the list of products
-    const [filteredProducts, setFilteredProducts] = useState([]); // State to store filtered list of products
+    const [games, setGames] = useState([]); // State to store the list of games
+    const [filteredGames, setFilteredGames] = useState([]); // State to store filtered list of games
     const [searchQuery, setSearchQuery] = useState(''); // State to track search query
     const { addToCart } = useCart(); // Hook to access cart context
 
-    // Fetch products from RAWG API when the component displays
+    // Fetch games from RAWG API when the component displays
     useEffect(() => {
-        const fetchProducts = async () => {
+        const fetchGames = async () => {
             try {
                 const games = await rawgService.getGames();
-                setProducts(games); // Update state with fetched products
-                setFilteredProducts(games); // Initialize filtered products with all products
+                setGames(games); // Update state with fetched games
+                setFilteredGames(games); // Initialize filtered games with all games
             } catch (error) {
-                console.error('Error fetching products from RAWG API:', error);
+                console.error('Error fetching games from RAWG API:', error);
             }
         };
 
-        fetchProducts();
+        fetchGames();
     }, []);
 
     // Fetch inventory from Supabase when the component displays
@@ -49,16 +49,16 @@ const StorePage = ({ loggedInUser }) => {
         fetchInventory();
     }, [loggedInUser]);
 
-    // Handle search input change and filter products
+    // Handle search input change and filter games
     const handleSearchChange = (e) => {
         const query = e.target.value.toLowerCase(); // Convert search query to lowercase
         setSearchQuery(query);
 
-        // Filter products by name
-        const filtered = products.filter((product) =>
-            product.name.toLowerCase().includes(query)
+        // Filter games by name
+        const filtered = games.filter((game) =>
+            game.name.toLowerCase().includes(query)
         );
-        setFilteredProducts(filtered); // Update state with filtered products
+        setFilteredGames(filtered); // Update state with filtered games
     };
 
     // Check if a game is owned by the user
@@ -86,25 +86,26 @@ const StorePage = ({ loggedInUser }) => {
             </div>
 
             <Row xs={1} sm={2} md={3} lg={4} className="g-4">
-                {filteredProducts.map((product) => (
-                    <Col key={product.id}>
+                {filteredGames.map((game) => (
+                    <Col key={game.id}>
                         <Card className="game-card">
                             <Card.Img
                                 variant="top"
-                                src={product.background_image || 'default-image-url'} // Replace with actual image URL field
-                                alt={product.name}
+                                src={game.background_image || 'default-image-url'} // Replace with actual image URL field
+                                alt={game.name}
                                 className="img-fluid"
                             />
                             <Card.Body>
-                                <Card.Title>{product.name}</Card.Title>
-                                <Card.Text>{product.description_raw}</Card.Text>
-                                <Card.Text>Rating: {product.rating}</Card.Text>
+                                <Card.Title>{game.name}</Card.Title>
+                                <Card.Text>{game.description_raw}</Card.Text>
+                                <Card.Text>Rating: {game.rating}</Card.Text>
+                                <Card.Text>Price: €19.99</Card.Text> {/* Add price */}
                                 <Button
                                     variant="primary"
-                                    onClick={() => addToCart(product)}
-                                    disabled={isOwned(product.id)} // Disable button if the game is owned
+                                    onClick={() => addToCart({ ...game, price: 19.99 })}
+                                    disabled={isOwned(game.id)} // Disable button if the game is owned
                                 >
-                                    {isOwned(product.id) ? 'Owned' : 'Add to Cart'}
+                                    {isOwned(game.id) ? 'Owned' : 'Add to Cart'}
                                 </Button>
                             </Card.Body>
                         </Card>
