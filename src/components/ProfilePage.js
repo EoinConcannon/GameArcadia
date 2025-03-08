@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { Card, Row, Col, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import rawgService from '../rawgService'; // Import the RAWG service
 
 const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
     const [inventory, setInventory] = useState([]);
@@ -15,21 +16,14 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
         email: '',
     });
 
-    // Fetch user inventory from Supabase
+    // Fetch user inventory from Supabase and RAWG API
     useEffect(() => {
         const fetchInventory = async () => {
             if (!loggedInUser) return;
 
             const { data, error } = await supabase
                 .from('user_inventory')
-                .select(`
-                    game_id,
-                    games (
-                        name,
-                        description,
-                        price
-                    )
-                `)
+                .select('game_id')
                 .eq('user_id', loggedInUser.id);
 
             if (error) {
@@ -38,7 +32,15 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                 return;
             }
 
-            setInventory(data); // Update inventory state with fetched data
+            // Fetch game details from RAWG API
+            const gameDetails = await Promise.all(
+                data.map(async (game) => {
+                    const gameDetails = await rawgService.getGameDetails(game.game_id);
+                    return { ...gameDetails, game_id: game.game_id };
+                })
+            );
+
+            setInventory(gameDetails); // Update inventory state with fetched data
         };
 
         fetchInventory();
@@ -133,7 +135,7 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
     }
 
     return (
-        <div className="profile-page container my-5">
+        <div className="profile-page container my-5 text-center">
             {/* User Information Section */}
             <div className="user-info mb-4">
                 <h2 className="text-center mb-4">User Information</h2>
@@ -215,13 +217,12 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                     <p className="text-center">Your inventory is empty.</p>
                 ) : (
                     <Row xs={1} sm={2} md={3} className="g-4">
-                        {inventory.map((item) => (
-                            <Col key={item.game_id}>
+                        {inventory.map((game) => (
+                            <Col key={game.game_id}>
                                 <Card>
+                                    <Card.Img variant="top" src={game.background_image} alt={game.name} />
                                     <Card.Body>
-                                        <Card.Title>{item.games.name}</Card.Title>
-                                        <Card.Text>{item.games.description}</Card.Text>
-                                        <Card.Text>€{item.games.price}</Card.Text>
+                                        <Card.Title>{game.name}</Card.Title>
                                     </Card.Body>
                                 </Card>
                             </Col>

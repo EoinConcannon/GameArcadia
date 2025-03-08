@@ -45,6 +45,19 @@ const rawgService = {
       throw error;
     }
   },
+  getGameDetails: async (gameId) => {
+    try {
+      const response = await axios.get(`${RAWG_API_URL}/games/${gameId}`, {
+        params: {
+          key: RAWG_API_KEY,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching game details from RAWG API:', error);
+      throw error;
+    }
+  },
 };
 
 export default rawgService;
