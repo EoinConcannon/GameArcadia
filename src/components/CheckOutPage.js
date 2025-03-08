@@ -39,6 +39,10 @@ const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
 
             const { clientSecret } = await response.json();
 
+            if (!clientSecret) {
+                throw new Error('Missing client secret');
+            }
+
             // Confirm the payment with Stripe
             const result = await stripe.confirmCardPayment(clientSecret, {
                 payment_method: {
@@ -59,7 +63,7 @@ const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
                 // Prepare the records for insertion
                 const inventoryItems = cartItems.map((item) => ({
                     user_id: loggedInUser.id,
-                    game_id: item.id,
+                    game_id: item.game_id,
                     purchased_at: new Date(),
                 }));
 

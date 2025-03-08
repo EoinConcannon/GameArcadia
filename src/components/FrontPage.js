@@ -140,7 +140,7 @@ const FrontPage = ({ loggedInUser }) => {
                     <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
                     <Button
                         variant="primary"
-                        onClick={() => addToCart({ ...randomGame, price: 19.99 })} // Add price to game object
+                        onClick={() => addToCart({ ...randomGame, price: 19.99, game_id: randomGame.id })} // Add price and game_id to game object
                         disabled={isOwned(randomGame.id)} // Disable button if the game is owned
                         className="card-button"
                     >
@@ -167,7 +167,7 @@ const FrontPage = ({ loggedInUser }) => {
                                 <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
                                 <Button
                                     variant="primary"
-                                    onClick={() => addToCart({ ...game, price: 19.99 })} // Add price to game object
+                                    onClick={() => addToCart({ ...game, price: 19.99, game_id: game.id })} // Add price and game_id to game object
                                     disabled={isOwned(game.id)} // Disable button if the game is owned
                                     className="card-button"
                                 >
@@ -197,7 +197,7 @@ const FrontPage = ({ loggedInUser }) => {
                                 <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
                                 <Button
                                     variant="primary"
-                                    onClick={() => addToCart({ ...game, price: 19.99 })} // Add price to game object
+                                    onClick={() => addToCart({ ...game, price: 19.99, game_id: game.id })} // Add price and game_id to game object
                                     disabled={isOwned(game.id)} // Disable button if the game is owned
                                     className="card-button"
                                 >

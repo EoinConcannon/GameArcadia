@@ -40,7 +40,7 @@ const CartPage = ({ loggedInUser }) => {
             ) : (
                 <div>
                     {cartItems.map((item) => (
-                        <div key={item.id} className="cart-item mb-3 p-3 border rounded">
+                        <div key={item.game_id} className="cart-item mb-3 p-3 border rounded">
                             <div className="d-flex justify-content-between">
                                 <div>
                                     <h5>{item.name}</h5>
@@ -48,7 +48,7 @@ const CartPage = ({ loggedInUser }) => {
                                 </div>
                                 <button
                                     className="btn btn-danger"
-                                    onClick={() => removeFromCart(item.id)}
+                                    onClick={() => removeFromCart(item.game_id)}
                                 >
                                     Remove
                                 </button>

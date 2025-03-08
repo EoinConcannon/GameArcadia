@@ -102,7 +102,7 @@ const StorePage = ({ loggedInUser }) => {
                                 <Card.Text>Price: €19.99</Card.Text> {/* Add price */}
                                 <Button
                                     variant="primary"
-                                    onClick={() => addToCart({ ...game, price: 19.99 })}
+                                    onClick={() => addToCart({ ...game, price: 19.99, game_id: game.id })}
                                     disabled={isOwned(game.id)} // Disable button if the game is owned
                                 >
                                     {isOwned(game.id) ? 'Owned' : 'Add to Cart'}

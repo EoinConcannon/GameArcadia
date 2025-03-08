@@ -21,7 +21,7 @@ export const CartProvider = ({ children, loggedInUser }) => {
             return;
         }
 
-        const itemExists = cartItems.some((cartItem) => cartItem.id === item.id);
+        const itemExists = cartItems.some((cartItem) => cartItem.game_id === item.game_id);
 
         if (itemExists) {
             return; // Do not add duplicate items
@@ -32,8 +32,8 @@ export const CartProvider = ({ children, loggedInUser }) => {
     };
 
     // Function to remove an item from the cart
-    const removeFromCart = (id) => {
-        setCartItems((prevItems) => prevItems.filter((item) => item.id !== id)); // Remove item from cart
+    const removeFromCart = (game_id) => {
+        setCartItems((prevItems) => prevItems.filter((item) => item.game_id !== game_id)); // Remove item from cart
     };
 
     // Function to clear all items from the cart
