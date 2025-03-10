@@ -6,6 +6,7 @@ import rawgService from '../rawgService'; // Import the RAWG service
 
 const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
     const [inventory, setInventory] = useState([]);
+    const [orderHistory, setOrderHistory] = useState([]); // State for order history
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
@@ -16,34 +17,57 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
         email: '',
     });
 
-    // Fetch user inventory from Supabase and RAWG API
+    // Fetch user inventory and order history from Supabase and RAWG API
     useEffect(() => {
-        const fetchInventory = async () => {
+        const fetchInventoryAndOrderHistory = async () => {
             if (!loggedInUser) return;
 
-            const { data, error } = await supabase
+            const { data: inventoryData, error: inventoryError } = await supabase
                 .from('user_inventory')
                 .select('game_id')
                 .eq('user_id', loggedInUser.id);
 
-            if (error) {
-                console.error('Error fetching inventory:', error);
+            if (inventoryError) {
+                console.error('Error fetching inventory:', inventoryError);
                 setError('Failed to fetch inventory');
                 return;
             }
 
             // Fetch game details from RAWG API
             const gameDetails = await Promise.all(
-                data.map(async (game) => {
+                inventoryData.map(async (game) => {
                     const gameDetails = await rawgService.getGameDetails(game.game_id);
                     return { ...gameDetails, game_id: game.game_id };
                 })
             );
 
             setInventory(gameDetails); // Update inventory state with fetched data
+
+            // Fetch order history from Supabase
+            const { data: orderHistoryData, error: orderHistoryError } = await supabase
+                .from('user_inventory')
+                .select('game_id, purchased_at')
+                .eq('user_id', loggedInUser.id)
+                .order('purchased_at', { ascending: false });
+
+            if (orderHistoryError) {
+                console.error('Error fetching order history:', orderHistoryError);
+                setError('Failed to fetch order history');
+                return;
+            }
+
+            // Fetch game details for order history from RAWG API
+            const orderHistoryDetails = await Promise.all(
+                orderHistoryData.map(async (order) => {
+                    const gameDetails = await rawgService.getGameDetails(order.game_id);
+                    return { ...gameDetails, purchased_at: order.purchased_at };
+                })
+            );
+
+            setOrderHistory(orderHistoryDetails); // Update order history state with fetched data
         };
 
-        fetchInventory();
+        fetchInventoryAndOrderHistory();
     }, [loggedInUser]);
 
     // Update editUserData when loggedInUser changes
@@ -228,6 +252,22 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                             </Col>
                         ))}
                     </Row>
+                )}
+            </div>
+
+            {/* Order History Section */}
+            <div className="mt-5">
+                <h2 className="text-center mb-4">Order History</h2>
+                {orderHistory.length === 0 ? (
+                    <p className="text-center">You have no previous purchases.</p>
+                ) : (
+                    <ul className="list-unstyled">
+                        {orderHistory.map((order) => (
+                            <li key={order.game_id + order.purchased_at}>
+                                <strong>{order.name}</strong>: {new Date(order.purchased_at).toLocaleString()}
+                            </li>
+                        ))}
+                    </ul>
                 )}
             </div>
         </div>
