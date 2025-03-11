@@ -18,6 +18,8 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Container from 'react-bootstrap/Container';
 import { CartProvider } from './contexts/CartContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null); // Track if a user is logged in
@@ -61,12 +63,14 @@ function App() {
             <Nav className="ms-auto">
               {loggedInUser ? (
                 <>
-                  <Nav.Link as={Link} to="/profile">{loggedInUser.username}</Nav.Link>
-                  <Nav.Link as={Link} to="/cart">Cart</Nav.Link>
-                  <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+                  <Nav.Link as={Link} to="/profile" className="ms-3">{loggedInUser.username}</Nav.Link>
+                  <Nav.Link as={Link} to="/cart" className="ms-3">
+                    <FontAwesomeIcon icon={faShoppingCart} />
+                  </Nav.Link>
+                  <Nav.Link onClick={handleLogout} className="ms-3">Logout</Nav.Link>
                 </>
               ) : (
-                <Nav.Link as={Link} to="/login">Login</Nav.Link>
+                <Nav.Link as={Link} to="/login" className="ms-3">Login</Nav.Link>
               )}
             </Nav>
           </Container>
