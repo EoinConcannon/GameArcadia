@@ -30,6 +30,17 @@ jobs:
       run: |
         echo "REACT_APP_SUPABASE_URL=${{ secrets.REACT_APP_SUPABASE_URL }}" >> $GITHUB_ENV
         echo "REACT_APP_SUPABASE_ANON_KEY=${{ secrets.REACT_APP_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+        echo "REACT_APP_RAWG_API_KEY=${{ secrets.RAWG_API_KEY }}" >> $GITHUB_ENV
+        echo "REACT_APP_STRIPE_PUBLISHABLE_KEY=${{ secrets.REACT_APP_STRIPE_PUBLISHABLE_KEY }}" >> $GITHUB_ENV
+        echo "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}" >> $GITHUB_ENV
+
+    - name: Start server
+      run: npm run start-server &
+      env:
+        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+
+    - name: Wait for server to be ready
+      run: sleep 10
 
     - name: Run tests
       run: npm test

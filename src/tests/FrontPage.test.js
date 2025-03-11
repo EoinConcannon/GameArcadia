@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/extend-expect';
 import FrontPage from '../components/FrontPage';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../supabase';
+import rawgService from '../rawgService';
 
 // Mock the useCart hook
 jest.mock('../contexts/CartContext', () => ({
@@ -19,6 +20,13 @@ jest.mock('../supabase', () => ({
     },
 }));
 
+// Mock the rawgService
+jest.mock('../rawgService', () => ({
+    getGames: jest.fn(),
+    getPopularGames: jest.fn(),
+    searchGames: jest.fn(),
+}));
+
 const mockLoggedInUser = {
     id: 'user-id',
     username: 'testuser',
@@ -28,9 +36,9 @@ const mockLoggedInUser = {
 const mockGame = {
     id: 'game-id',
     name: 'Test Game',
-    description: 'This is a test game.',
-    price: 10,
-    image_url: 'test-image-url',
+    description_raw: 'This is a test game.',
+    rating: 4.5,
+    background_image: 'test-image-url',
 };
 
 const mockInventory = [{ game_id: 'game-id' }];
@@ -56,6 +64,10 @@ describe('FrontPage', () => {
             }
             return { select: jest.fn() };
         });
+
+        rawgService.getGames.mockResolvedValue([mockGame]);
+        rawgService.getPopularGames.mockResolvedValue([mockGame]);
+        rawgService.searchGames.mockResolvedValue([mockGame]);
     });
 
     afterEach(() => {
@@ -69,8 +81,9 @@ describe('FrontPage', () => {
             expect(screen.getByText('Welcome to GameArcadia')).toBeInTheDocument();
             expect(screen.getByText('Featured Game')).toBeInTheDocument();
             expect(screen.getByText(mockGame.name)).toBeInTheDocument();
-            expect(screen.getByText(mockGame.description)).toBeInTheDocument();
-            expect(screen.getByText(`€${mockGame.price}`)).toBeInTheDocument();
+            expect(screen.getByText(mockGame.description_raw)).toBeInTheDocument();
+            expect(screen.getByText('Rating: 4.5')).toBeInTheDocument();
+            expect(screen.getByText('Price: €19.99')).toBeInTheDocument();
         });
     });
 

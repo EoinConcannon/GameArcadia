@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import { BrowserRouter } from 'react-router-dom';
 import App from '../App';
@@ -41,7 +41,6 @@ describe('App Component', () => {
     // Check if the Navbar is rendered
     expect(screen.getByText('GameArcadia')).toBeInTheDocument();
     expect(screen.getByText('Store')).toBeInTheDocument();
-    expect(screen.getByText('Shopping Cart')).toBeInTheDocument();
     expect(screen.getByText('Logout')).toBeInTheDocument();
 
     // Check if the FrontPage is rendered
@@ -53,10 +52,10 @@ describe('App Component', () => {
 
     // Navigate to Profile page
     fireEvent.click(screen.getByText('testuser'));
-    expect(await screen.findByText('Profile')).toBeInTheDocument();
+    expect(await screen.findByText('User Information')).toBeInTheDocument();
 
     // Navigate to Cart page
-    fireEvent.click(screen.getByText('Shopping Cart'));
+    fireEvent.click(screen.getByRole('button', { name: /cart/i }));
     expect(await screen.findByText('Your Cart')).toBeInTheDocument();
 
     // Navigate to About page

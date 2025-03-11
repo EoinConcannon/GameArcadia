@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter as Router } from 'react-router-dom';
-import SignUpPage from './SignUpPage';
+import SignUpPage from '../components/SignUpPage';
 import { supabase } from '../supabase';
 
 // Mock the supabase client
