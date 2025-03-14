@@ -41,6 +41,10 @@ const TestComponent = () => {
 };
 
 describe('CartContext', () => {
+    beforeEach(() => {
+        jest.spyOn(window, 'alert').mockImplementation(() => {});
+    });
+
     afterEach(() => {
         jest.clearAllMocks();
     });

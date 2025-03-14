@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import { BrowserRouter as Router } from 'react-router-dom';
 import UserManagementPage from '../components/UserManagementPage';
@@ -49,11 +49,13 @@ describe('UserManagementPage', () => {
     });
 
     test('renders user management page with list of users', async () => {
-        render(
-            <Router>
-                <UserManagementPage loggedInUser={mockLoggedInUser} />
-            </Router>
-        );
+        await act(async () => {
+            render(
+                <Router>
+                    <UserManagementPage loggedInUser={mockLoggedInUser} />
+                </Router>
+            );
+        });
 
         await waitFor(() => {
             expect(screen.getByText('List of Users')).toBeInTheDocument();
@@ -70,11 +72,13 @@ describe('UserManagementPage', () => {
             select: jest.fn().mockResolvedValue({ data: [], error: null }),
         });
 
-        render(
-            <Router>
-                <UserManagementPage loggedInUser={mockLoggedInUser} />
-            </Router>
-        );
+        await act(async () => {
+            render(
+                <Router>
+                    <UserManagementPage loggedInUser={mockLoggedInUser} />
+                </Router>
+            );
+        });
 
         await waitFor(() => {
             expect(screen.getByText('No users found.')).toBeInTheDocument();
@@ -86,11 +90,13 @@ describe('UserManagementPage', () => {
             select: jest.fn().mockResolvedValue({ data: null, error: 'Error fetching users' }),
         });
 
-        render(
-            <Router>
-                <UserManagementPage loggedInUser={mockLoggedInUser} />
-            </Router>
-        );
+        await act(async () => {
+            render(
+                <Router>
+                    <UserManagementPage loggedInUser={mockLoggedInUser} />
+                </Router>
+            );
+        });
 
         await waitFor(() => {
             expect(screen.getByText('Failed to fetch data')).toBeInTheDocument();
