@@ -126,28 +126,32 @@ const FrontPage = ({ loggedInUser }) => {
                 )}
             </div>
             <h4 className="section-title">Featured Game</h4>
-            <Card className="card">
-                <Card.Img
-                    variant="top"
-                    src={randomGame.background_image || 'components/temp_image/image.jpg'} // Replace with actual image URL field
-                    alt={randomGame.name}
-                    className="img-fluid"
-                />
-                <Card.Body className="card-body">
-                    <Card.Title className="card-title">{randomGame.name}</Card.Title>
-                    <Card.Text className="card-text">{randomGame.description_raw}</Card.Text>
-                    <Card.Text className="card-text">Rating: {randomGame.rating}</Card.Text>
-                    <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
-                    <Button
-                        variant="primary"
-                        onClick={() => addToCart({ ...randomGame, price: 19.99, game_id: randomGame.id })} // Add price and game_id to game object
-                        disabled={isOwned(randomGame.id)} // Disable button if the game is owned
-                        className="card-button"
-                    >
-                        {isOwned(randomGame.id) ? 'Owned' : 'Add to Cart'}
-                    </Button>
-                </Card.Body>
-            </Card>
+            <Row className="game-list">
+                <Col xs={12} sm={6} md={4} lg={3}>
+                    <Card className="card">
+                        <Card.Img
+                            variant="top"
+                            src={randomGame.background_image || 'components/temp_image/image.jpg'} // Replace with actual image URL field
+                            alt={randomGame.name}
+                            className="img-fluid"
+                        />
+                        <Card.Body className="card-body">
+                            <Card.Title className="card-title">{randomGame.name}</Card.Title>
+                            <Card.Text className="card-text">{randomGame.description_raw}</Card.Text>
+                            <Card.Text className="card-text">Rating: {randomGame.rating}</Card.Text>
+                            <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
+                            <Button
+                                variant="primary"
+                                onClick={() => addToCart({ ...randomGame, price: 19.99, game_id: randomGame.id })} // Add price and game_id to game object
+                                disabled={isOwned(randomGame.id)} // Disable button if the game is owned
+                                className="card-button"
+                            >
+                                {isOwned(randomGame.id) ? 'Owned' : 'Add to Cart'}
+                            </Button>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
 
             <h4 className="section-title">Recommended Games</h4>
             <Row className="game-list">
