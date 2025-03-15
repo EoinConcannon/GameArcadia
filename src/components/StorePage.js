@@ -11,7 +11,7 @@ const StorePage = ({ loggedInUser }) => {
     const [games, setGames] = useState([]); // State to store the list of games
     const [filteredGames, setFilteredGames] = useState([]); // State to store filtered list of games
     const [searchQuery, setSearchQuery] = useState(''); // State to track search query
-    const { addToCart } = useCart(); // Hook to access cart context
+    const { cartItems, addToCart } = useCart(); // Hook to access cart context
 
     // Fetch games from RAWG API when the component displays
     useEffect(() => {
@@ -64,6 +64,9 @@ const StorePage = ({ loggedInUser }) => {
     // Check if a game is owned by the user
     const isOwned = (gameId) => inventory.includes(gameId);
 
+    // Check if a game is in the cart
+    const isInCart = (gameId) => cartItems.some((item) => item.game_id === gameId);
+
     return (
         <div className="store-page">
             <h2 className="text-center my-4">Store</h2>
@@ -103,9 +106,9 @@ const StorePage = ({ loggedInUser }) => {
                                 <Button
                                     variant="primary"
                                     onClick={() => addToCart({ ...game, price: 19.99, game_id: game.id })}
-                                    disabled={isOwned(game.id)} // Disable button if the game is owned
+                                    disabled={isOwned(game.id) || isInCart(game.id)} // Disable button if the game is owned or in cart
                                 >
-                                    {isOwned(game.id) ? 'Owned' : 'Add to Cart'}
+                                    {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
                                 </Button>
                             </Card.Body>
                         </Card>

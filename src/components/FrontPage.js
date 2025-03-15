@@ -12,7 +12,7 @@ const FrontPage = ({ loggedInUser }) => {
     const [topGames, setTopGames] = useState([]); // State to store top games
     const [searchQuery, setSearchQuery] = useState(''); // State to track search query
     const [searchResults, setSearchResults] = useState([]); // State to store search results
-    const { addToCart } = useCart(); // Hook to access cart context
+    const { cartItems, addToCart } = useCart(); // Hook to access cart context
 
     // Function to shuffle an array
     const shuffleArray = (array) => {
@@ -76,6 +76,9 @@ const FrontPage = ({ loggedInUser }) => {
 
     // Check if a game is owned by the user
     const isOwned = (gameId) => inventory.includes(gameId);
+
+    // Check if a game is in the cart
+    const isInCart = (gameId) => cartItems.some((item) => item.game_id === gameId);
 
     // Handle search input change and filter games
     const handleSearchChange = async (e) => {
@@ -143,10 +146,10 @@ const FrontPage = ({ loggedInUser }) => {
                             <Button
                                 variant="primary"
                                 onClick={() => addToCart({ ...randomGame, price: 19.99, game_id: randomGame.id })} // Add price and game_id to game object
-                                disabled={isOwned(randomGame.id)} // Disable button if the game is owned
+                                disabled={isOwned(randomGame.id) || isInCart(randomGame.id)} // Disable button if the game is owned or in cart
                                 className="card-button"
                             >
-                                {isOwned(randomGame.id) ? 'Owned' : 'Add to Cart'}
+                                {isOwned(randomGame.id) ? 'Owned' : isInCart(randomGame.id) ? 'In Cart' : 'Add to Cart'}
                             </Button>
                         </Card.Body>
                     </Card>
@@ -172,10 +175,10 @@ const FrontPage = ({ loggedInUser }) => {
                                 <Button
                                     variant="primary"
                                     onClick={() => addToCart({ ...game, price: 19.99, game_id: game.id })} // Add price and game_id to game object
-                                    disabled={isOwned(game.id)} // Disable button if the game is owned
+                                    disabled={isOwned(game.id) || isInCart(game.id)} // Disable button if the game is owned or in cart
                                     className="card-button"
                                 >
-                                    {isOwned(game.id) ? 'Owned' : 'Add to Cart'}
+                                    {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
                                 </Button>
                             </Card.Body>
                         </Card>
@@ -202,10 +205,10 @@ const FrontPage = ({ loggedInUser }) => {
                                 <Button
                                     variant="primary"
                                     onClick={() => addToCart({ ...game, price: 19.99, game_id: game.id })} // Add price and game_id to game object
-                                    disabled={isOwned(game.id)} // Disable button if the game is owned
+                                    disabled={isOwned(game.id) || isInCart(game.id)} // Disable button if the game is owned or in cart
                                     className="card-button"
                                 >
-                                    {isOwned(game.id) ? 'Owned' : 'Add to Cart'}
+                                    {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
                                 </Button>
                             </Card.Body>
                         </Card>
