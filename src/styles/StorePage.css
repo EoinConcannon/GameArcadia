@@ -5,6 +5,12 @@
 .game-card {
     max-width: 250px; /* Adjust the max width to scale down the cards */
     margin: 0 auto;
+    cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+.game-card:hover {
+    transform: scale(1.05); /* Slightly enlarge the card on hover */
+    transition: transform 0.3s ease;
 }
 
 .game-card img {

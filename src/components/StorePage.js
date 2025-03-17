@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Card, Button, Form } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
+import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import rawgService from '../rawgService';
 import { supabase } from '../supabase';
@@ -12,6 +13,7 @@ const StorePage = ({ loggedInUser }) => {
     const [filteredGames, setFilteredGames] = useState([]); // State to store filtered list of games
     const [searchQuery, setSearchQuery] = useState(''); // State to track search query
     const { cartItems, addToCart } = useCart(); // Hook to access cart context
+    const navigate = useNavigate(); // Hook to navigate to different routes
 
     // Fetch games from RAWG API when the component displays
     useEffect(() => {
@@ -67,6 +69,11 @@ const StorePage = ({ loggedInUser }) => {
     // Check if a game is in the cart
     const isInCart = (gameId) => cartItems.some((item) => item.game_id === gameId);
 
+    // Navigate to game details page
+    const handleCardClick = (gameId) => {
+        navigate(`/game/${gameId}`);
+    };
+
     return (
         <div className="store-page">
             <h2 className="text-center my-4">Store</h2>
@@ -91,7 +98,7 @@ const StorePage = ({ loggedInUser }) => {
             <Row xs={1} sm={2} md={3} lg={4} className="g-4">
                 {filteredGames.map((game) => (
                     <Col key={game.id}>
-                        <Card className="game-card">
+                        <Card className="game-card" onClick={() => handleCardClick(game.id)}>
                             <Card.Img
                                 variant="top"
                                 src={game.background_image || 'default-image-url'} // Replace with actual image URL field
@@ -105,7 +112,10 @@ const StorePage = ({ loggedInUser }) => {
                                 <Card.Text>Price: €19.99</Card.Text> {/* Add price */}
                                 <Button
                                     variant="primary"
-                                    onClick={() => addToCart({ ...game, price: 19.99, game_id: game.id })}
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent card click event
+                                        addToCart({ ...game, price: 19.99, game_id: game.id });
+                                    }}
                                     disabled={isOwned(game.id) || isInCart(game.id)} // Disable button if the game is owned or in cart
                                 >
                                     {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
