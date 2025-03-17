@@ -1,0 +1,93 @@
+.game-details-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.game-details-container {
+    display: flex;
+    flex-direction: row;
+    background-color: #3b0a45;
+    /* Dark Violet */
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #561a70;
+    /* Rich Magenta Shadow */
+    max-width: 1000px;
+    width: 100%;
+}
+
+.game-details-image {
+    width: 450px;
+    height: auto;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    margin-right: 20px;
+}
+
+.game-details-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+    background-color: #3b0a45;
+    /* Dark Violet */
+    border-radius: 10px;
+    cursor: default; /* Ensure cursor does not display as clickable */
+}
+
+.game-details-card:hover {
+    transform: none; /* Remove hover effect */
+}
+
+.game-details-card .card-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffffff;
+    /* White Text */
+}
+
+.game-details-card .card-text {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
+    /* White Text */
+    cursor: pointer; /* Make description clickable */
+}
+
+.game-details-card .card-button {
+    margin-top: 1rem;
+    background-color: #8a2be2;
+    /* Electric Violet */
+    border: none;
+    color: #1d0b27;
+    /* Deep Purple Text */
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    align-self: center; /* Center the button */
+}
+
+.game-details-card .card-button:hover {
+    background-color: #a14fdd;
+    /* Neon Pink Hover */
+}
+
+/* Modal styles */
+.modal-content {
+    background-color: #3b0a45;
+    /* Dark Violet */
+    color: #ffffff;
+    /* White Text */
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.modal-header {
+    border-bottom: none;
+}
+
+.modal-footer {
+    border-top: none;
+}

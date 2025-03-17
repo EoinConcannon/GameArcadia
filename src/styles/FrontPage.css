@@ -59,6 +59,12 @@ body {
     border-radius: 10px;
     box-shadow: 0 0 10px #561a70;
     /* Rich Magenta Shadow */
+    cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+.card:hover {
+    transform: scale(1.05); /* Slightly enlarge the card on hover */
+    transition: transform 0.3s ease;
 }
 
 .card img {
