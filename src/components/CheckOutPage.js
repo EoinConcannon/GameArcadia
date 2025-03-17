@@ -95,10 +95,10 @@ const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
                         options={{
                             style: {
                                 base: {
-                                    color: '#333',
+                                    color: '#ffffff', // Brighter text color
                                     fontSize: '16px',
                                     '::placeholder': {
-                                        color: '#888',
+                                        color: '#d3a4ff', // Brighter placeholder color
                                     },
                                 },
                                 invalid: {

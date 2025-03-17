@@ -51,6 +51,10 @@ body {
     z-index: 1000;
 }
 
+.search-results .list-group-item {
+    cursor: pointer; /* Change cursor to pointer on hover */
+}
+
 .card {
     margin: 0 auto;
     background-color: #3b0a45;

@@ -108,6 +108,11 @@ const FrontPage = ({ loggedInUser }) => {
         navigate(`/game/${gameId}`);
     };
 
+    // Navigate to game details page from search results
+    const handleSearchResultClick = (gameId) => {
+        navigate(`/game/${gameId}`);
+    };
+
     if (!randomGame) {
         return <p>Loading featured game...</p>; // Display loading message until game is fetched
     }
@@ -128,7 +133,7 @@ const FrontPage = ({ loggedInUser }) => {
                 {searchResults.length > 0 && (
                     <ListGroup className="search-results">
                         {searchResults.map((game) => (
-                            <ListGroup.Item key={game.id}>
+                            <ListGroup.Item key={game.id} onClick={() => handleSearchResultClick(game.id)}>
                                 {game.name}
                             </ListGroup.Item>
                         ))}
