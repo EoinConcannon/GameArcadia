@@ -1,0 +1,30 @@
+/* Ensure the card does not expand or become clickable */
+.user-details-card {
+    cursor: default; /* Prevent the cursor from showing as clickable */
+    transition: none; /* Disable hover effects */
+}
+
+.user-details-card:hover {
+    transform: none; /* Prevent the card from expanding */
+}
+
+/* Style for input fields when editing */
+.edit-input {
+    color: #ffffff; /* Make the text white */
+    background-color: #3b0a45; /* Dark background for better contrast */
+    border: 1px solid #561a70; /* Add a border for better visibility */
+    padding: 0.5rem;
+    border-radius: 5px;
+}
+
+.edit-input::placeholder {
+    color: #d3a4ff; /* Soft neon glow for placeholder text */
+}
+
+/* Style for labels */
+form .form-label {
+    color: #ffffff; /* Bright white color for labels */
+    font-weight: bold; /* Make the labels bold for better visibility */
+    font-size: 1rem; /* Slightly increase the font size */
+    margin-bottom: 0.5rem;
+}

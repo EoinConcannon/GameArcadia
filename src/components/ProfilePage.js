@@ -3,6 +3,7 @@ import { supabase } from '../supabase';
 import { Card, Row, Col, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import rawgService from '../rawgService'; // Import the RAWG service
+import '../styles/ProfilePage.css';
 
 const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
     const [inventory, setInventory] = useState([]);
@@ -163,7 +164,7 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
             {/* User Information Section */}
             <div className="user-info mb-4">
                 <h2 className="text-center mb-4">User Information</h2>
-                <Card>
+                <Card className="user-details-card">
                     <Card.Body>
                         {editing ? (
                             <Form>
@@ -175,6 +176,7 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                                         onChange={(e) =>
                                             setEditUserData({ ...editUserData, username: e.target.value })
                                         }
+                                        className="edit-input"
                                     />
                                 </Form.Group>
                                 <Form.Group className="mb-3">
@@ -185,6 +187,7 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                                         onChange={(e) =>
                                             setEditUserData({ ...editUserData, email: e.target.value })
                                         }
+                                        className="edit-input" /* Apply the edit-input class */
                                     />
                                 </Form.Group>
                             </Form>
