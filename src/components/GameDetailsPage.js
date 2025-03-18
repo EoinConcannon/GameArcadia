@@ -3,13 +3,15 @@ import { useParams } from 'react-router-dom';
 import rawgService from '../rawgService';
 import { Card, Container, Button, Modal } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
+import { supabase } from '../supabase'; // Import Supabase for inventory check
 import '../styles/GameDetailsPage.css';
 
-const GameDetailsPage = () => {
+const GameDetailsPage = ({ loggedInUser }) => {
     const { gameId } = useParams(); // Get the game ID from the URL
     const [game, setGame] = useState(null); // State to store the game details
     const { addToCart, cartItems } = useCart(); // Hook to access cart context
     const [showModal, setShowModal] = useState(false); // State to toggle modal visibility
+    const [isOwned, setIsOwned] = useState(false); // State to check if the game is owned
 
     // Fetch game details from RAWG API
     useEffect(() => {
@@ -24,6 +26,32 @@ const GameDetailsPage = () => {
 
         fetchGameDetails();
     }, [gameId]);
+
+    // Check if the game is owned by the user
+    useEffect(() => {
+        const checkOwnership = async () => {
+            if (!loggedInUser) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('user_inventory')
+                    .select('game_id')
+                    .eq('user_id', loggedInUser.id)
+                    .eq('game_id', gameId);
+
+                if (error) {
+                    console.error('Error checking ownership:', error);
+                    return;
+                }
+
+                setIsOwned(data.length > 0); // Set ownership status
+            } catch (err) {
+                console.error('Unexpected error checking ownership:', err);
+            }
+        };
+
+        checkOwnership();
+    }, [loggedInUser, gameId]);
 
     if (!game) {
         return <p>Loading game details...</p>; // Display loading message until game details are fetched
@@ -61,10 +89,10 @@ const GameDetailsPage = () => {
                         <Button
                             variant="primary"
                             onClick={() => addToCart({ ...game, price: 19.99, game_id: game.id })}
-                            disabled={isInCart(game.id)} // Disable button if the game is in cart
+                            disabled={isOwned || isInCart(game.id)} // Disable button if the game is owned or in cart
                             className="card-button"
                         >
-                            {isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
+                            {isOwned ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
                         </Button>
                     </Card.Body>
                 </Card>

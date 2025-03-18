@@ -81,6 +81,11 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
         }
     }, [loggedInUser]);
 
+    // Navigate to game details page
+    const handleGameClick = (gameId) => {
+        navigate(`/game/${gameId}`);
+    };
+
     // Handle account deletion
     const handleDeleteAccount = async () => {
         // For admins, deletion is not allowed.
@@ -246,7 +251,10 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                     <Row xs={1} sm={2} md={3} className="g-4">
                         {inventory.map((game) => (
                             <Col key={game.game_id}>
-                                <Card>
+                                <Card
+                                    onClick={() => handleGameClick(game.game_id)} // Navigate to game details page
+                                    className="inventory-game-card"
+                                >
                                     <Card.Img variant="top" src={game.background_image} alt={game.name} />
                                     <Card.Body>
                                         <Card.Title>{game.name}</Card.Title>

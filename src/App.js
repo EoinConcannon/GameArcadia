@@ -103,7 +103,10 @@ function App() {
                 <UserManagementPage loggedInUser={loggedInUser} />
               </AdminRoute>
             } />
-            <Route path="/game/:gameId" element={<GameDetailsPage />} /> {/* Add the new route */}
+            <Route
+              path="/game/:gameId"
+              element={<GameDetailsPage loggedInUser={loggedInUser} />}
+            />
           </Routes>
         </div>
 
