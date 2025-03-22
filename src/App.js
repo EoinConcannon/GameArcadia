@@ -21,6 +21,7 @@ import Container from 'react-bootstrap/Container';
 import { CartProvider } from './contexts/CartContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
+import OrderHistory from './components/OrderHistory';
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null); // Track if a user is logged in
@@ -83,6 +84,7 @@ function App() {
             <Route path="/" element={<FrontPage loggedInUser={loggedInUser} />} />
             <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
             <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} setLoggedInUser={setLoggedInUser} />} />
+            <Route path="/order-history" element={<OrderHistory loggedInUser={loggedInUser} />} />
             <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
             <Route path="/store" element={<StorePage loggedInUser={loggedInUser} />} />
             <Route path="/cart" element={<CartPage loggedInUser={loggedInUser} />} />

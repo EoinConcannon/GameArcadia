@@ -1,0 +1,12 @@
+.order-history-page {
+    text-align: center;
+}
+
+.order-history-page ul {
+    list-style: none;
+    padding: 0;
+}
+
+.order-history-page li {
+    margin-bottom: 10px;
+}
