@@ -58,6 +58,20 @@ const rawgService = {
       throw error;
     }
   },
+  getGamesByGenre: async (genre) => {
+    try {
+      const response = await axios.get(`${RAWG_API_URL}/games`, {
+        params: {
+          key: RAWG_API_KEY,
+          genres: genre,
+        },
+      });
+      return response.data.results;
+    } catch (error) {
+      console.error('Error fetching games by genre:', error);
+      return [];
+    }
+  },
 };
 
 export default rawgService;

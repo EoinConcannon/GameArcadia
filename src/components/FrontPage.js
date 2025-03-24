@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabase';
 import { Card, Button, Form, Row, Col, ListGroup } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
@@ -70,11 +70,61 @@ const FrontPage = ({ loggedInUser }) => {
                 return;
             }
 
-            setInventory(data.map((item) => item.game_id)); // Store game IDs of owned games
+            // Fetch game details including genres
+            const inventoryDetails = await Promise.all(
+                data.map(async (item) => {
+                    const gameDetails = await rawgService.getGameDetails(item.game_id);
+                    return { id: item.game_id, genres: gameDetails.genres.map((genre) => genre.name) };
+                })
+            );
+
+            setInventory(inventoryDetails); // Store inventory with genre information
         };
 
         fetchInventory();
     }, [loggedInUser]);
+
+    // Memoized function to get favorite genres
+    const getFavoriteGenres = useCallback(() => {
+        const genreCount = {};
+
+        inventory.forEach((game) => {
+            game.genres.forEach((genre) => {
+                genreCount[genre] = (genreCount[genre] || 0) + 1;
+            });
+        });
+
+        const favoriteGenres = Object.entries(genreCount)
+            .sort((a, b) => b[1] - a[1])
+            .map(([genre]) => genre)
+            .slice(0, 3); // Top 3 genres
+
+        return favoriteGenres;
+    }, [inventory]); 
+
+    // Fetch recommended games based on favorite genres
+    useEffect(() => {
+        const fetchRecommendedGames = async () => {
+            if (!loggedInUser || inventory.length === 0) return;
+
+            const favoriteGenres = getFavoriteGenres();
+
+            try {
+                // Fetch games for each favorite genre
+                const genreGames = await Promise.all(
+                    favoriteGenres.map((genre) => rawgService.getGamesByGenre(genre))
+                );
+
+                // Flatten the results and remove duplicates
+                const recommended = [...new Set(genreGames.flat())];
+                setRecommendedGames(recommended.slice(0, 6)); // Limit to 6 games
+            } catch (error) {
+                console.error('Error fetching recommended games:', error);
+            }
+        };
+
+        fetchRecommendedGames();
+    }, [loggedInUser, inventory, getFavoriteGenres]); // Dependencies: loggedInUser, inventory, getFavoriteGenres
 
     // Check if a game is owned by the user
     const isOwned = (gameId) => inventory.includes(gameId);
@@ -172,37 +222,41 @@ const FrontPage = ({ loggedInUser }) => {
             </Row>
 
             <h4 className="section-title">Recommended Games</h4>
-            <Row className="game-list">
-                {recommendedGames.map((game) => (
-                    <Col key={game.id} xs={12} sm={6} md={4} lg={3}>
-                        <Card className="card" onClick={() => handleCardClick(game.id)}>
-                            <Card.Img
-                                variant="top"
-                                src={game.background_image}
-                                alt={game.name}
-                                className="img-fluid"
-                            />
-                            <Card.Body className="card-body">
-                                <Card.Title className="card-title">{game.name}</Card.Title>
-                                <Card.Text className="card-text">{game.description_raw}</Card.Text>
-                                <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
-                                <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
-                                <Button
-                                    variant="primary"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // Prevent card click event
-                                        addToCart({ ...game, price: 19.99, game_id: game.id });
-                                    }}
-                                    disabled={isOwned(game.id) || isInCart(game.id)} // Disable button if the game is owned or in cart
-                                    className="card-button"
-                                >
-                                    {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
-                                </Button>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                ))}
-            </Row>
+            {recommendedGames.length === 0 ? (
+                <p>No recommendations available at the moment. Try adding more games to your library!</p>
+            ) : (
+                <Row className="game-list">
+                    {recommendedGames.map((game) => (
+                        <Col key={game.id} xs={12} sm={6} md={4} lg={3}>
+                            <Card className="card" onClick={() => handleCardClick(game.id)}>
+                                <Card.Img
+                                    variant="top"
+                                    src={game.background_image}
+                                    alt={game.name}
+                                    className="img-fluid"
+                                />
+                                <Card.Body className="card-body">
+                                    <Card.Title className="card-title">{game.name}</Card.Title>
+                                    <Card.Text className="card-text">{game.description_raw}</Card.Text>
+                                    <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
+                                    <Card.Text className="card-text">Price: €19.99</Card.Text>
+                                    <Button
+                                        variant="primary"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            addToCart({ ...game, price: 19.99, game_id: game.id });
+                                        }}
+                                        disabled={isOwned(game.id) || isInCart(game.id)}
+                                        className="card-button"
+                                    >
+                                        {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
+                                    </Button>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    ))}
+                </Row>
+            )}
 
             <h4 className="section-title">Top Games</h4>
             <Row className="game-list">
