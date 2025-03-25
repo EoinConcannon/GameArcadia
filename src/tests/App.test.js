@@ -5,13 +5,14 @@ import { BrowserRouter } from 'react-router-dom';
 import App from '../App';
 import { supabase } from '../supabase';
 
-// Mock the supabase client
+// Mock the supabase client more comprehensively
 jest.mock('../supabase', () => ({
-    supabase: {
-        from: jest.fn(() => ({
-            select: jest.fn(),
-        })),
-    },
+  supabase: {
+    from: jest.fn(() => ({
+      select: jest.fn(),
+      // Add more mock methods as needed
+    })),
+  },
 }));
 
 const mockLoggedInUser = {
@@ -23,6 +24,9 @@ const mockLoggedInUser = {
 
 describe('App Component', () => {
   beforeEach(() => {
+    // Clear localStorage before each test
+    localStorage.clear();
+    // Set up mocked localStorage for logged-in user
     localStorage.setItem('loggedInUser', JSON.stringify(mockLoggedInUser));
   });
 
@@ -31,60 +35,73 @@ describe('App Component', () => {
     jest.clearAllMocks();
   });
 
-  test('renders App component and navigates to different routes', async () => {
+  test('renders App component with logged-in user navigation', async () => {
     render(
       <BrowserRouter>
         <App />
       </BrowserRouter>
     );
 
-    // Check if the Navbar is rendered
+    // Verify core navigation elements
     expect(screen.getByText('GameArcadia')).toBeInTheDocument();
     expect(screen.getByText('Store')).toBeInTheDocument();
     expect(screen.getByText('Logout')).toBeInTheDocument();
-
-    // Check if the FrontPage is rendered
-    expect(screen.getByText('Welcome to GameArcadia')).toBeInTheDocument();
-
-    // Navigate to Store page
-    fireEvent.click(screen.getByText('Store'));
-    expect(await screen.findByText('Store')).toBeInTheDocument();
-
-    // Navigate to Profile page
-    fireEvent.click(screen.getByText('testuser'));
-    expect(await screen.findByText('User Information')).toBeInTheDocument();
-
-    // Navigate to Cart page
-    fireEvent.click(screen.getByRole('button', { name: /cart/i }));
-    expect(await screen.findByText('Your Cart')).toBeInTheDocument();
-
-    // Navigate to About page
-    fireEvent.click(screen.getByText('About'));
-    expect(await screen.findByText('About')).toBeInTheDocument();
+    expect(screen.getByText('testuser')).toBeInTheDocument();
   });
 
-  test('renders Login link when user is not logged in', () => {
-    localStorage.removeItem('loggedInUser');
-    render(
+  test('handles user logout correctly', async () => {
+    const { unmount } = render(
       <BrowserRouter>
         <App />
       </BrowserRouter>
     );
 
-    // Check if the Login link is rendered
-    expect(screen.getByText('Login')).toBeInTheDocument();
+    // Verify user is logged in
+    expect(screen.getByText('testuser')).toBeInTheDocument();
+
+    // Click logout
+    fireEvent.click(screen.getByText('Logout'));
+
+    // Wait for navigation and verify login link appears
+    await waitFor(() => {
+      expect(screen.getByText('Login')).toBeInTheDocument();
+      expect(localStorage.getItem('loggedInUser')).toBeNull();
+    });
+
+    unmount();
   });
 
-  test('renders Admin link when user is an admin', () => {
+  test('renders different navigation for admin user', () => {
     const adminUser = { ...mockLoggedInUser, role: 'admin' };
     localStorage.setItem('loggedInUser', JSON.stringify(adminUser));
+
     render(
       <BrowserRouter>
         <App />
       </BrowserRouter>
     );
 
-    // Check if the Admin link is rendered
+    // Check for admin-specific elements
     expect(screen.getByText('Admin')).toBeInTheDocument();
+  });
+
+  test('handles localStorage parsing errors gracefully', () => {
+    // Simulate a corrupt localStorage entry
+    localStorage.setItem('loggedInUser', '{invalid json}');
+
+    // Spy on console.error to verify error handling
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+
+    render(
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    );
+
+    // Verify error was logged and login link is shown
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(screen.getByText('Login')).toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
   });
 });

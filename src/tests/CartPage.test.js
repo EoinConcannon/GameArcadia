@@ -2,12 +2,17 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import { BrowserRouter as Router } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import CartPage from '../components/CartPage';
 import { useCart } from '../contexts/CartContext';
 
-// Mock the useCart hook
+// Mock the hooks
 jest.mock('../contexts/CartContext', () => ({
     useCart: jest.fn(),
+}));
+jest.mock('react-router-dom', () => ({
+    ...jest.requireActual('react-router-dom'),
+    useNavigate: jest.fn(),
 }));
 
 const mockLoggedInUser = {
@@ -22,12 +27,27 @@ const mockCartItems = [
 ];
 
 describe('CartPage', () => {
+    let mockClearCart;
+    let mockRemoveFromCart;
+    let mockNavigate;
+
     beforeEach(() => {
+        // Setup mocks before each test
+        mockClearCart = jest.fn();
+        mockRemoveFromCart = jest.fn();
+        mockNavigate = jest.fn();
+
         useCart.mockReturnValue({
             cartItems: mockCartItems,
-            removeFromCart: jest.fn(),
-            clearCart: jest.fn(),
+            removeFromCart: mockRemoveFromCart,
+            clearCart: mockClearCart,
         });
+
+        useNavigate.mockReturnValue(mockNavigate);
+
+        // Mock window.confirm and window.alert
+        window.confirm = jest.fn(() => true);
+        window.alert = jest.fn();
     });
 
     afterEach(() => {
@@ -65,8 +85,6 @@ describe('CartPage', () => {
     });
 
     test('calls removeFromCart when "Remove" button is clicked', () => {
-        const { removeFromCart } = useCart();
-
         render(
             <Router>
                 <CartPage loggedInUser={mockLoggedInUser} />
@@ -76,12 +94,10 @@ describe('CartPage', () => {
         const removeButtons = screen.getAllByText('Remove');
         fireEvent.click(removeButtons[0]);
 
-        expect(removeFromCart).toHaveBeenCalledWith('game-id-1');
+        expect(mockRemoveFromCart).toHaveBeenCalledWith('game-id-1');
     });
 
     test('calls clearCart when "Clear Cart" button is clicked', () => {
-        const { clearCart } = useCart();
-
         render(
             <Router>
                 <CartPage loggedInUser={mockLoggedInUser} />
@@ -91,16 +107,11 @@ describe('CartPage', () => {
         const clearCartButton = screen.getByText('Clear Cart');
         fireEvent.click(clearCartButton);
 
-        expect(clearCart).toHaveBeenCalled();
+        expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to clear your cart?');
+        expect(mockClearCart).toHaveBeenCalled();
     });
 
     test('navigates to checkout when "Proceed to Checkout" button is clicked', () => {
-        const mockedNavigate = jest.fn();
-        jest.mock('react-router-dom', () => ({
-            ...jest.requireActual('react-router-dom'),
-            useNavigate: () => mockedNavigate,
-        }));
-
         render(
             <Router>
                 <CartPage loggedInUser={mockLoggedInUser} />
@@ -110,7 +121,7 @@ describe('CartPage', () => {
         const checkoutButton = screen.getByText('Proceed to Checkout');
         fireEvent.click(checkoutButton);
 
-        expect(mockedNavigate).toHaveBeenCalledWith('/checkout');
+        expect(mockNavigate).toHaveBeenCalledWith('/checkout');
     });
 
     test('shows alert when trying to proceed to checkout with empty cart', () => {
@@ -119,8 +130,6 @@ describe('CartPage', () => {
             removeFromCart: jest.fn(),
             clearCart: jest.fn(),
         });
-
-        window.alert = jest.fn();
 
         render(
             <Router>
@@ -135,8 +144,6 @@ describe('CartPage', () => {
     });
 
     test('shows alert when trying to proceed to checkout without being logged in', () => {
-        window.alert = jest.fn();
-
         render(
             <Router>
                 <CartPage loggedInUser={null} />

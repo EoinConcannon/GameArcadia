@@ -24,35 +24,40 @@ import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import OrderHistory from './components/OrderHistory';
 
 function App() {
-  const [loggedInUser, setLoggedInUser] = useState(null); // Track if a user is logged in
-  const [users, setUsers] = useState([]); // Track users
-  const navigate = useNavigate(); // Hook to navigate to different pages
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const navigate = useNavigate();
 
-  // Load logged-in user from local storage when the app starts
+  // Improved localStorage handling with error checking
   useEffect(() => {
-    const user = localStorage.getItem('loggedInUser');
-    if (user) {
-      setLoggedInUser(JSON.parse(user));
+    try {
+      const storedUser = localStorage.getItem('loggedInUser');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        setLoggedInUser(parsedUser);
+      }
+    } catch (error) {
+      console.error('Error reading user from localStorage:', error);
+      // Optional: Clear problematic localStorage item
+      localStorage.removeItem('loggedInUser');
     }
   }, []);
 
-  // Handle user logout
+  // Improved logout handling
   const handleLogout = () => {
-    setLoggedInUser(null); // Clear logged-in user status
-    localStorage.removeItem('loggedInUser'); // Remove user from local storage
-    navigate('/'); // Navigate to the home page
-  };
-
-  // Temporary function to add a new user (will be replaced with a database later)
-  // No longer functional after adding Supabase
-  const addUser = (newUser) => {
-    setUsers((prevUsers) => [...prevUsers, newUser]);
+    try {
+      setLoggedInUser(null);
+      localStorage.removeItem('loggedInUser');
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback navigation
+      window.location.href = '/';
+    }
   };
 
   return (
     <CartProvider loggedInUser={loggedInUser}>
       <div className="app-container">
-        {/* Header */}
         <Navbar bg="dark" variant="dark" className="app-header">
           <Container>
             <Navbar.Brand as={Link} to="/">GameArcadia</Navbar.Brand>
@@ -78,14 +83,13 @@ function App() {
           </Container>
         </Navbar>
 
-        {/* Main Content */}
         <div className="content">
           <Routes>
             <Route path="/" element={<FrontPage loggedInUser={loggedInUser} />} />
-            <Route path="/login" element={<LoginPage users={users} setLoggedInUser={setLoggedInUser} />} />
+            <Route path="/login" element={<LoginPage setLoggedInUser={setLoggedInUser} />} />
             <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} setLoggedInUser={setLoggedInUser} />} />
             <Route path="/order-history" element={<OrderHistory loggedInUser={loggedInUser} />} />
-            <Route path="/signup" element={<SignUpPage addUser={addUser} />} />
+            <Route path="/signup" element={<SignUpPage />} />
             <Route path="/store" element={<StorePage loggedInUser={loggedInUser} />} />
             <Route path="/cart" element={<CartPage loggedInUser={loggedInUser} />} />
             <Route path="/checkout" element={<CheckOutPage loggedInUser={loggedInUser} />} />
@@ -112,7 +116,6 @@ function App() {
           </Routes>
         </div>
 
-        {/* Footer */}
         <footer className="footer">
           <Navbar bg="dark" variant="dark" className="app-footer">
             <Container>
