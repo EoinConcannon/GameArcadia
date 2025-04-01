@@ -1,5 +1,10 @@
 .order-history-page {
     text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #d3a4ff;
+    /* Soft Neon Glow Text - matching your scheme */
 }
 
 .order-history-page ul {
@@ -9,4 +14,195 @@
 
 .order-history-page li {
     margin-bottom: 10px;
+}
+
+.order-history-page h2 {
+    color: #d3a4ff;
+    /* Soft Neon Glow Text */
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.order-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.order-item {
+    background-color: #3b0a45;
+    /* Dark Violet - matching your other cards */
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #561a70;
+    /* Rich Magenta Shadow - from your App.css */
+    padding: 0;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.order-item:hover {
+    transform: scale(1.02);
+    /* Slightly enlarge on hover - like your other cards */
+    border-left: 3px solid #8a2be2;
+    /* Electric Violet from your App.css */
+}
+
+.order-content {
+    display: flex;
+    padding: 15px;
+    align-items: center;
+}
+
+.game-image-container {
+    width: 80px;
+    margin-right: 15px;
+}
+
+.game-image {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.game-image-placeholder {
+    width: 100%;
+    height: 80px;
+    background-color: #561a70;
+    /* Rich Magenta */
+    border-radius: 5px;
+}
+
+.game-details {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.game-title {
+    margin: 0 0 5px 0;
+    color: #ffffff;
+    /* White Text - matching your card titles */
+    font-size: 1.2rem;
+}
+
+.game-genres {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #a14fdd;
+    /* Neon Pink from your hover states */
+}
+
+.purchase-details {
+    text-align: right;
+    padding-left: 15px;
+}
+
+.purchase-label {
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+    color: #8a2be2;
+    /* Electric Violet */
+}
+
+.purchase-date {
+    font-weight: bold;
+    color: #ffffff;
+    /* White Text */
+}
+
+.purchase-time {
+    font-size: 0.8rem;
+    color: #a14fdd;
+    /* Neon Pink */
+}
+
+.order-date {
+    background-color: #561a70;
+    /* Rich Magenta */
+    color: #ffffff;
+    /* White Text */
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+/* Pagination styling */
+.pagination {
+    margin-top: 2rem;
+}
+
+.page-link {
+    background-color: #3b0a45;
+    /* Dark Violet */
+    color: #d3a4ff;
+    /* Soft Neon Glow Text */
+    border-color: #561a70;
+    /* Rich Magenta */
+}
+
+.page-item.active .page-link {
+    background-color: #8a2be2;
+    /* Electric Violet */
+    border-color: #8a2be2;
+    /* Electric Violet */
+    color: #ffffff;
+}
+
+.page-link:hover {
+    background-color: #561a70;
+    /* Rich Magenta */
+    color: #ffffff;
+}
+
+.page-item.disabled .page-link {
+    background-color: #1d0b27;
+    /* Deep Purple Background */
+    color: #561a70;
+    /* Rich Magenta - dimmed */
+    border-color: #3b0a45;
+    /* Dark Violet */
+}
+
+/* Loading state */
+.loading-container {
+    padding: 40px;
+    text-align: center;
+}
+
+.loading-container .spinner-border {
+    color: #8a2be2;
+    /* Electric Violet */
+}
+
+/* Empty state */
+.no-orders {
+    padding: 40px;
+    background-color: #3b0a45;
+    /* Dark Violet */
+    border-radius: 8px;
+    font-size: 1.1rem;
+    box-shadow: 0 0 10px #561a70;
+    /* Rich Magenta Shadow */
+}
+
+/* Alert styling */
+.alert-danger {
+    background-color: #3b0a45;
+    /* Dark Violet */
+    border-color: #ff0066;
+    /* Bright Pink - for error */
+    color: #ff0066;
+    /* Bright Pink - for error */
+}
+
+.alert-info {
+    background-color: #3b0a45;
+    /* Dark Violet */
+    border-color: #03dac6;
+    /* From your button color */
+    color: #03dac6;
+    /* From your button color */
 }
