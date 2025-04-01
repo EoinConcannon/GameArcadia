@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '../supabase';
 import { Card, Button, Form, Row, Col, ListGroup } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
@@ -16,6 +16,13 @@ const FrontPage = ({ loggedInUser }) => {
     const [searchResults, setSearchResults] = useState([]); // State to store search results
     const { cartItems, addToCart } = useCart(); // Hook to access cart context
     const navigate = useNavigate(); // Hook to navigate to different routes
+
+    // Add loading state
+    const [isLoading, setIsLoading] = useState({
+        featuredGame: true,
+        recommendations: false,
+        topGames: false
+    });
 
     // Function to shuffle an array
     const shuffleArray = (array) => {
@@ -45,11 +52,14 @@ const FrontPage = ({ loggedInUser }) => {
     // Fetch popular games from RAWG API
     useEffect(() => {
         const fetchPopularGames = async () => {
+            setIsLoading(prev => ({...prev, topGames: true}));
             try {
                 const popularGames = await rawgService.getPopularGames();
                 setTopGames(popularGames.slice(0, 6)); // Set the first 6 popular games as top games
             } catch (error) {
                 console.error('Error fetching popular games from RAWG API:', error);
+            } finally {
+                setIsLoading(prev => ({...prev, topGames: false}));
             }
         };
 
@@ -104,6 +114,11 @@ const FrontPage = ({ loggedInUser }) => {
         return favoriteGenres;
     }, [inventory]);
 
+    const filteredOwnedGames = useMemo(() => {
+        const ownedIds = inventory.map(game => game.id);
+        return games => games.filter(game => !ownedIds.includes(game.id));
+    }, [inventory]);
+
     // Fetch recommended games based on favorite genres
     useEffect(() => {
         const fetchRecommendedGames = async () => {
@@ -127,8 +142,7 @@ const FrontPage = ({ loggedInUser }) => {
                 const allGames = genreGames.flat();
 
                 // Filter out owned games
-                const ownedIds = inventory.map(game => game.id);
-                const filteredGames = allGames.filter(game => !ownedIds.includes(game.id));
+                const filteredGames = filteredOwnedGames(allGames);
 
                 setRecommendedGames(filteredGames.slice(0, 6)); // Limit to 6 games
             } catch (error) {
@@ -137,7 +151,7 @@ const FrontPage = ({ loggedInUser }) => {
         };
 
         fetchRecommendedGames();
-    }, [loggedInUser, inventory, getFavoriteGenres]);
+    }, [loggedInUser, inventory, getFavoriteGenres, filteredOwnedGames]);
 
     // Improved fallback recommendations that adapt to user's genres
     useEffect(() => {
@@ -246,6 +260,37 @@ const FrontPage = ({ loggedInUser }) => {
         navigate(`/game/${gameId}`);
     };
 
+    // Create a GameCard component
+    const GameCard = ({ game, isOwned, isInCart, addToCart, onClick }) => (
+        <Card className="card" onClick={() => onClick(game.id)}>
+            <Card.Img
+                variant="top"
+                src={game.background_image}
+                alt={game.name}
+                className="img-fluid"
+            />
+            <Card.Body className="card-body">
+                <Card.Title className="card-title">{game.name}</Card.Title>
+                <Card.Text className="card-text">
+                    {game.description_raw?.substring(0, 100)}...
+                </Card.Text>
+                <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
+                <Card.Text className="card-text">Price: €19.99</Card.Text>
+                <Button
+                    variant="primary"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart({ ...game, price: 19.99, game_id: game.id });
+                    }}
+                    disabled={isOwned(game.id) || isInCart(game.id)}
+                    className="card-button"
+                >
+                    {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
+                </Button>
+            </Card.Body>
+        </Card>
+    );
+
     if (!randomGame) {
         return <p>Loading featured game...</p>; // Display loading message until game is fetched
     }
@@ -276,31 +321,13 @@ const FrontPage = ({ loggedInUser }) => {
             <h4 className="section-title">Featured Game</h4>
             <Row className="game-list">
                 <Col xs={12} sm={6} md={4} lg={3}>
-                    <Card className="card" onClick={() => handleCardClick(randomGame.id)}>
-                        <Card.Img
-                            variant="top"
-                            src={randomGame.background_image}
-                            alt={randomGame.name}
-                            className="img-fluid"
-                        />
-                        <Card.Body className="card-body">
-                            <Card.Title className="card-title">{randomGame.name}</Card.Title>
-                            <Card.Text className="card-text">{randomGame.description_raw}</Card.Text>
-                            <Card.Text className="card-text">Rating: {randomGame.rating}</Card.Text>
-                            <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
-                            <Button
-                                variant="primary"
-                                onClick={(e) => {
-                                    e.stopPropagation(); // Prevent card click event
-                                    addToCart({ ...randomGame, price: 19.99, game_id: randomGame.id });
-                                }}
-                                disabled={isOwned(randomGame.id) || isInCart(randomGame.id)} // Disable button if the game is owned or in cart
-                                className="card-button"
-                            >
-                                {isOwned(randomGame.id) ? 'Owned' : isInCart(randomGame.id) ? 'In Cart' : 'Add to Cart'}
-                            </Button>
-                        </Card.Body>
-                    </Card>
+                    <GameCard
+                        game={randomGame}
+                        isOwned={isOwned}
+                        isInCart={isInCart}
+                        addToCart={addToCart}
+                        onClick={handleCardClick}
+                    />
                 </Col>
             </Row>
 
@@ -311,68 +338,36 @@ const FrontPage = ({ loggedInUser }) => {
                 <Row className="game-list">
                     {recommendedGames.map((game) => (
                         <Col key={game.id} xs={12} sm={6} md={4} lg={3}>
-                            <Card className="card" onClick={() => handleCardClick(game.id)}>
-                                <Card.Img
-                                    variant="top"
-                                    src={game.background_image}
-                                    alt={game.name}
-                                    className="img-fluid"
-                                />
-                                <Card.Body className="card-body">
-                                    <Card.Title className="card-title">{game.name}</Card.Title>
-                                    <Card.Text className="card-text">{game.description_raw}</Card.Text>
-                                    <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
-                                    <Card.Text className="card-text">Price: €19.99</Card.Text>
-                                    <Button
-                                        variant="primary"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            addToCart({ ...game, price: 19.99, game_id: game.id });
-                                        }}
-                                        disabled={isOwned(game.id) || isInCart(game.id)}
-                                        className="card-button"
-                                    >
-                                        {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
-                                    </Button>
-                                </Card.Body>
-                            </Card>
+                            <GameCard
+                                game={game}
+                                isOwned={isOwned}
+                                isInCart={isInCart}
+                                addToCart={addToCart}
+                                onClick={handleCardClick}
+                            />
                         </Col>
                     ))}
                 </Row>
             )}
 
             <h4 className="section-title">Top Games</h4>
-            <Row className="game-list">
-                {topGames.map((game) => (
-                    <Col key={game.id} xs={12} sm={6} md={4} lg={3}>
-                        <Card className="card" onClick={() => handleCardClick(game.id)}>
-                            <Card.Img
-                                variant="top"
-                                src={game.background_image}
-                                alt={game.name}
-                                className="img-fluid"
+            {isLoading.topGames ? (
+                <p>Loading top games...</p>
+            ) : (
+                <Row className="game-list">
+                    {topGames.map((game) => (
+                        <Col key={game.id} xs={12} sm={6} md={4} lg={3}>
+                            <GameCard
+                                game={game}
+                                isOwned={isOwned}
+                                isInCart={isInCart}
+                                addToCart={addToCart}
+                                onClick={handleCardClick}
                             />
-                            <Card.Body className="card-body">
-                                <Card.Title className="card-title">{game.name}</Card.Title>
-                                <Card.Text className="card-text">{game.description_raw}</Card.Text>
-                                <Card.Text className="card-text">Rating: {game.rating}</Card.Text>
-                                <Card.Text className="card-text">Price: €19.99</Card.Text> {/* Add price */}
-                                <Button
-                                    variant="primary"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // Prevent card click event
-                                        addToCart({ ...game, price: 19.99, game_id: game.id });
-                                    }}
-                                    disabled={isOwned(game.id) || isInCart(game.id)} // Disable button if the game is owned or in cart
-                                    className="card-button"
-                                >
-                                    {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
-                                </Button>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                ))}
-            </Row>
+                        </Col>
+                    ))}
+                </Row>
+            )}
         </div>
     );
 };
