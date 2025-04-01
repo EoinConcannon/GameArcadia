@@ -3,25 +3,65 @@ import axios from 'axios';
 const RAWG_API_KEY = process.env.REACT_APP_RAWG_API_KEY;
 const RAWG_API_URL = 'https://api.rawg.io/api';
 
-const genreSlugs = {
+// Initialize with some common mappings as fallback
+let genreSlugs = {
   "Racing": "racing",
   "Arcade": "arcade",
   "Action": "action",
-  "Adventure": "adventure",
-  "RPG": "role-playing-games-rpg",
-  "Shooter": "shooter",
-  "Strategy": "strategy",
-  "Simulation": "simulation",
-  "Puzzle": "puzzle",
-  "Sports": "sports",
-  "Fighting": "fighting",
-  "Family": "family",
-  "Board Games": "board-games",
-  "Educational": "educational",
-  "Card": "card"
+  // ...other essential mappings
 };
 
+// Function to initialize genre slugs from API
+const initializeGenreSlugs = async () => {
+  try {
+    console.log('Fetching complete genre list from RAWG API...');
+    const response = await axios.get(`${RAWG_API_URL}/genres`, {
+      params: {
+        key: RAWG_API_KEY,
+        page_size: 50 // Get a large number of genres
+      }
+    });
+    
+    // Create a mapping from genre name to slug
+    const apiGenreSlugs = {};
+    response.data.results.forEach(genre => {
+      apiGenreSlugs[genre.name] = genre.slug;
+    });
+    
+    // Update the genreSlugs with API data, but keep our fallbacks
+    genreSlugs = { ...genreSlugs, ...apiGenreSlugs };
+    console.log(`Genre mapping initialized with ${Object.keys(genreSlugs).length} genres`);
+  } catch (error) {
+    console.error('Failed to fetch genre mappings from API:', error);
+    // Continue using the hardcoded fallbacks
+  }
+};
+
+// Initialize when the service is first imported
+initializeGenreSlugs();
+
 const rawgService = {
+  // Method to access the current genreSlugs mapping
+  getGenreSlugs: () => genreSlugs,
+  
+  // Method to get a specific genre slug with fallbacks
+  getGenreSlug: (genreName) => {
+    if (!genreName) return '';
+    
+    // Try direct match
+    if (genreSlugs[genreName]) return genreSlugs[genreName];
+    
+    // Try case-insensitive match
+    const lowerGenre = genreName.toLowerCase();
+    const matchKey = Object.keys(genreSlugs).find(
+      key => key.toLowerCase() === lowerGenre
+    );
+    if (matchKey) return genreSlugs[matchKey];
+    
+    // No match, create slug from name - remove special chars, replace spaces with hyphens
+    return lowerGenre.replace(/[^\w\s]/g, '').replace(/\s+/g, '-');
+  },
+  
   getGames: async () => {
     try {
       const response = await axios.get(`${RAWG_API_URL}/games`, {
@@ -78,17 +118,19 @@ const rawgService = {
   },
   getGamesByGenre: async (genre) => {
     try {
-      // Use the mapping to get the proper slug, or use the genre name as fallback
-      const genreSlug = genreSlugs[genre] || genre.toLowerCase();
-
+      // Get the proper slug using our enhanced method
+      const genreSlug = rawgService.getGenreSlug(genre);
+      
+      console.log(`Looking up games for genre: ${genre} (slug: ${genreSlug})`);
+      
       const response = await axios.get(`${RAWG_API_URL}/games`, {
         params: {
           key: RAWG_API_KEY,
           genres: genreSlug,
-          page_size: 40, // Fetch more games at once
+          page_size: 40,
         },
       });
-
+      
       return response.data.results || [];
     } catch (error) {
       console.error(`Error fetching games for genre ${genre}:`, error);

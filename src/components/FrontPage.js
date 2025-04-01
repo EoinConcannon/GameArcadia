@@ -139,46 +139,75 @@ const FrontPage = ({ loggedInUser }) => {
         fetchRecommendedGames();
     }, [loggedInUser, inventory, getFavoriteGenres]);
 
-    // Add this near your other useEffect hooks
+    // Improved fallback recommendations that adapt to user's genres
     useEffect(() => {
         const fetchFallbackRecommendations = async () => {
+            // Only proceed if we need fallback recommendations
             if (recommendedGames.length > 0 || !loggedInUser || inventory.length === 0) return;
 
+            console.log("Using fallback recommendation system");
+
             try {
-                // First try a direct search for racing games
-                const directSearch = await rawgService.searchGames("racing");
+                // Get the user's favorite genres
+                const favoriteGenres = getFavoriteGenres();
+                const primaryGenre = favoriteGenres.length > 0 ? favoriteGenres[0] : null;
 
-                // Remove games the user already owns
-                const ownedIds = inventory.map(game => game.id);
-                const filteredGames = directSearch.filter(game => !ownedIds.includes(game.id));
+                // If we have at least one genre preference, use it
+                if (primaryGenre) {
+                    // Try direct search with the primary genre
+                    const directSearch = await rawgService.searchGames(primaryGenre);
 
-                if (filteredGames.length > 0) {
-                    setRecommendedGames(filteredGames.slice(0, 6));
-                    return;
+                    // Remove games the user already owns
+                    const ownedIds = inventory.map(game => game.id);
+                    const filteredGames = directSearch.filter(game => !ownedIds.includes(game.id));
+
+                    if (filteredGames.length > 0) {
+                        setRecommendedGames(filteredGames.slice(0, 6));
+                        return;
+                    }
+
+                    // If direct search didn't work, try tags
+                    const response = await axios.get(`https://api.rawg.io/api/games`, {
+                        params: {
+                            key: process.env.REACT_APP_RAWG_API_KEY,
+                            tags: primaryGenre.toLowerCase(),
+                            page_size: 20,
+                        }
+                    });
+
+                    const tagGames = response.data.results || [];
+                    const filteredTagGames = tagGames.filter(game => !ownedIds.includes(game.id));
+
+                    if (filteredTagGames.length > 0) {
+                        setRecommendedGames(filteredTagGames.slice(0, 6));
+                        return;
+                    }
                 }
 
-                // If that didn't work, try using tags instead of genres
-                const response = await axios.get(`https://api.rawg.io/api/games`, {
-                    params: {
-                        key: process.env.REACT_APP_RAWG_API_KEY,
-                        tags: "racing",
-                        page_size: 10,
-                    }
-                });
+                // Last resort - get popular games as recommendations
+                const popularGames = await rawgService.getPopularGames();
 
-                const tagGames = response.data.results || [];
-                console.log(`Found ${tagGames.length} games with racing tag`);
+                // Remove owned games
+                const ownedIds = inventory.map(game => game.id);
+                const filteredPopular = popularGames.filter(game => !ownedIds.includes(game.id));
 
-                const filteredTagGames = tagGames.filter(game => !ownedIds.includes(game.id));
-                setRecommendedGames(filteredTagGames.slice(0, 6));
+                setRecommendedGames(filteredPopular.slice(0, 6));
 
             } catch (error) {
                 console.error("Error in fallback recommendations:", error);
+
+                // Absolute last resort - get any games
+                try {
+                    const games = await rawgService.getGames();
+                    setRecommendedGames(games.slice(0, 6));
+                } catch (finalError) {
+                    console.error("Failed to get any recommendations:", finalError);
+                }
             }
         };
 
         fetchFallbackRecommendations();
-    }, [recommendedGames.length, loggedInUser, inventory]);
+    }, [recommendedGames.length, loggedInUser, inventory, getFavoriteGenres]);
 
     // Check if a game is owned by the user
     const isOwned = (gameId) => inventory.some((game) => game.id === gameId);
