@@ -52,14 +52,14 @@ const FrontPage = ({ loggedInUser }) => {
     // Fetch popular games from RAWG API
     useEffect(() => {
         const fetchPopularGames = async () => {
-            setIsLoading(prev => ({...prev, topGames: true}));
+            setIsLoading(prev => ({ ...prev, topGames: true }));
             try {
                 const popularGames = await rawgService.getPopularGames();
                 setTopGames(popularGames.slice(0, 6)); // Set the first 6 popular games as top games
             } catch (error) {
                 console.error('Error fetching popular games from RAWG API:', error);
             } finally {
-                setIsLoading(prev => ({...prev, topGames: false}));
+                setIsLoading(prev => ({ ...prev, topGames: false }));
             }
         };
 

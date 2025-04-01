@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabase';
 import { Card, Row, Col, Button, Form } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
@@ -17,34 +17,80 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
         email: '',
     });
 
+    // Add loading state for better UX
+    const [isLoading, setIsLoading] = useState({
+        inventory: false,
+        userUpdate: false
+    });
+
+    // Add validation state
+    const [validationErrors, setValidationErrors] = useState({});
+
+    // Add pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const gamesPerPage = 9;
+
+    // Calculate pagination indices
+    const indexOfLastGame = currentPage * gamesPerPage;
+    const indexOfFirstGame = indexOfLastGame - gamesPerPage;
+    const currentGames = inventory.slice(indexOfFirstGame, indexOfLastGame);
+    const totalPages = Math.ceil(inventory.length / gamesPerPage);
+
+    // Pagination navigation function
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
     // Fetch user inventory and order history from Supabase and RAWG API
     useEffect(() => {
+        let isMounted = true;
+
         const fetchInventoryAndOrderHistory = async () => {
             if (!loggedInUser) return;
 
-            const { data: inventoryData, error: inventoryError } = await supabase
-                .from('user_inventory')
-                .select('game_id')
-                .eq('user_id', loggedInUser.id);
+            setIsLoading(prev => ({ ...prev, inventory: true }));
 
-            if (inventoryError) {
-                console.error('Error fetching inventory:', inventoryError);
-                setError('Failed to fetch inventory');
-                return;
+            try {
+                const { data: inventoryData, error: inventoryError } = await supabase
+                    .from('user_inventory')
+                    .select('game_id')
+                    .eq('user_id', loggedInUser.id);
+
+                if (inventoryError || !isMounted) {
+                    if (isMounted) {
+                        console.error('Error fetching inventory:', inventoryError);
+                        setError('Failed to fetch inventory');
+                    }
+                    return;
+                }
+
+                // Fetch game details from RAWG API
+                const gameDetails = await Promise.all(
+                    inventoryData.map(async (game) => {
+                        const gameDetails = await rawgService.getGameDetails(game.game_id);
+                        return { ...gameDetails, game_id: game.game_id };
+                    })
+                );
+
+                if (isMounted) {
+                    setInventory(gameDetails); // Update inventory state with fetched data
+                }
+            } catch (error) {
+                if (isMounted) {
+                    console.error('Error:', error);
+                    setError('Failed to fetch data');
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoading(prev => ({ ...prev, inventory: false }));
+                }
             }
-
-            // Fetch game details from RAWG API
-            const gameDetails = await Promise.all(
-                inventoryData.map(async (game) => {
-                    const gameDetails = await rawgService.getGameDetails(game.game_id);
-                    return { ...gameDetails, game_id: game.game_id };
-                })
-            );
-
-            setInventory(gameDetails); // Update inventory state with fetched data
         };
 
         fetchInventoryAndOrderHistory();
+
+        // Cleanup function
+        return () => {
+            isMounted = false;
+        };
     }, [loggedInUser]);
 
     // Update editUserData when loggedInUser changes
@@ -58,12 +104,12 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
     }, [loggedInUser]);
 
     // Navigate to game details page
-    const handleGameClick = (gameId) => {
+    const handleGameClick = useCallback((gameId) => {
         navigate(`/game/${gameId}`);
-    };
+    }, [navigate]);
 
     // Handle account deletion
-    const handleDeleteAccount = async () => {
+    const handleDeleteAccount = useCallback(async () => {
         // For admins, deletion is not allowed.
         if (loggedInUser.role === 'admin') {
             alert("Admin accounts cannot be deleted.");
@@ -96,9 +142,31 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
 
         // Redirect to the home page after deletion
         navigate('/');
-    };
+    }, [loggedInUser, setLoggedInUser, navigate]);
 
-    const handleSave = async () => {
+    // Validate before saving
+    const handleSave = useCallback(async () => {
+        // Validate inputs
+        const errors = {};
+
+        if (!editUserData.username.trim()) {
+            errors.username = "Username cannot be empty";
+        }
+
+        if (!editUserData.email.trim()) {
+            errors.email = "Email cannot be empty";
+        } else if (!/\S+@\S+\.\S+/.test(editUserData.email)) {
+            errors.email = "Please enter a valid email";
+        }
+
+        if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+            return;
+        }
+
+        setValidationErrors({});
+        setIsLoading(prev => ({ ...prev, userUpdate: true }));
+
         // Update the user's information in the 'users' table (except password)
         const { data, error } = await supabase
             .from('users')
@@ -125,7 +193,9 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
         } else {
             alert("Failed to update your information. Please try again later.");
         }
-    };
+
+        setIsLoading(prev => ({ ...prev, userUpdate: false }));
+    }, [editUserData, loggedInUser, setLoggedInUser]);
 
     // Handle cancel editing: revert changes
     const handleCancel = () => {
@@ -157,8 +227,11 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                                         onChange={(e) =>
                                             setEditUserData({ ...editUserData, username: e.target.value })
                                         }
-                                        className="edit-input"
+                                        className={`edit-input ${validationErrors.username ? 'is-invalid' : ''}`}
                                     />
+                                    {validationErrors.username && (
+                                        <div className="invalid-feedback">{validationErrors.username}</div>
+                                    )}
                                 </Form.Group>
                                 <Form.Group className="mb-3">
                                     <Form.Label>Email</Form.Label>
@@ -168,8 +241,11 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
                                         onChange={(e) =>
                                             setEditUserData({ ...editUserData, email: e.target.value })
                                         }
-                                        className="edit-input" /* Apply the edit-input class */
+                                        className={`edit-input ${validationErrors.email ? 'is-invalid' : ''}`} /* Apply the edit-input class */
                                     />
+                                    {validationErrors.email && (
+                                        <div className="invalid-feedback">{validationErrors.email}</div>
+                                    )}
                                 </Form.Group>
                             </Form>
                         ) : (
@@ -221,24 +297,61 @@ const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
             {/* Inventory Section */}
             <div className="mt-5">
                 <h2 className="text-center mb-4">{loggedInUser.username}'s Inventory</h2>
-                {inventory.length === 0 ? (
+                {isLoading.inventory ? (
+                    <p className="text-center">Loading your games...</p>
+                ) : inventory.length === 0 ? (
                     <p className="text-center">Your inventory is empty.</p>
                 ) : (
-                    <Row xs={1} sm={2} md={3} className="g-4">
-                        {inventory.map((game) => (
-                            <Col key={game.game_id}>
-                                <Card
-                                    onClick={() => handleGameClick(game.game_id)} // Navigate to game details page
-                                    className="inventory-game-card"
-                                >
-                                    <Card.Img variant="top" src={game.background_image} alt={game.name} />
-                                    <Card.Body>
-                                        <Card.Title>{game.name}</Card.Title>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        ))}
-                    </Row>
+                    <>
+                        <Row xs={1} sm={2} md={3} className="g-4">
+                            {currentGames.map((game) => (
+                                <Col key={game.game_id}>
+                                    <Card
+                                        onClick={() => handleGameClick(game.game_id)} // Navigate to game details page
+                                        className="inventory-game-card"
+                                    >
+                                        <Card.Img variant="top" src={game.background_image} alt={game.name} />
+                                        <Card.Body>
+                                            <Card.Title>{game.name}</Card.Title>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            ))}
+                        </Row>
+                        {inventory.length > gamesPerPage && (
+                            <div className="pagination-container mt-4">
+                                <nav>
+                                    <ul className="pagination justify-content-center">
+                                        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                            <button
+                                                className="page-link"
+                                                onClick={() => paginate(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                            >
+                                                Previous
+                                            </button>
+                                        </li>
+                                        {[...Array(totalPages)].map((_, index) => (
+                                            <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                                                <button className="page-link" onClick={() => paginate(index + 1)}>
+                                                    {index + 1}
+                                                </button>
+                                            </li>
+                                        ))}
+                                        <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                            <button
+                                                className="page-link"
+                                                onClick={() => paginate(currentPage + 1)}
+                                                disabled={currentPage === totalPages}
+                                            >
+                                                Next
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
