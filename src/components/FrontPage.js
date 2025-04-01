@@ -5,6 +5,7 @@ import { useCart } from '../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import '../styles/FrontPage.css';
 import rawgService from '../rawgService';
+import axios from 'axios';
 
 const FrontPage = ({ loggedInUser }) => {
     const [randomGame, setRandomGame] = useState(null); // State to store the random game
@@ -84,14 +85,15 @@ const FrontPage = ({ loggedInUser }) => {
         fetchInventory();
     }, [loggedInUser]);
 
-    // Memoized function to get favorite genres
     const getFavoriteGenres = useCallback(() => {
         const genreCount = {};
 
         inventory.forEach((game) => {
-            game.genres.forEach((genre) => {
-                genreCount[genre] = (genreCount[genre] || 0) + 1;
-            });
+            if (Array.isArray(game.genres)) {
+                game.genres.forEach((genre) => {
+                    genreCount[genre] = (genreCount[genre] || 0) + 1;
+                });
+            }
         });
 
         const favoriteGenres = Object.entries(genreCount)
@@ -100,7 +102,7 @@ const FrontPage = ({ loggedInUser }) => {
             .slice(0, 3); // Top 3 genres
 
         return favoriteGenres;
-    }, [inventory]); 
+    }, [inventory]);
 
     // Fetch recommended games based on favorite genres
     useEffect(() => {
@@ -109,25 +111,77 @@ const FrontPage = ({ loggedInUser }) => {
 
             const favoriteGenres = getFavoriteGenres();
 
+            if (favoriteGenres.length === 0) {
+                return;
+            }
+
             try {
                 // Fetch games for each favorite genre
                 const genreGames = await Promise.all(
-                    favoriteGenres.map((genre) => rawgService.getGamesByGenre(genre))
+                    favoriteGenres.map((genre) => {
+                        return rawgService.getGamesByGenre(genre);
+                    })
                 );
 
                 // Flatten the results and remove duplicates
-                const recommended = [...new Set(genreGames.flat())];
-                setRecommendedGames(recommended.slice(0, 6)); // Limit to 6 games
+                const allGames = genreGames.flat();
+
+                // Filter out owned games
+                const ownedIds = inventory.map(game => game.id);
+                const filteredGames = allGames.filter(game => !ownedIds.includes(game.id));
+
+                setRecommendedGames(filteredGames.slice(0, 6)); // Limit to 6 games
             } catch (error) {
                 console.error('Error fetching recommended games:', error);
             }
         };
 
         fetchRecommendedGames();
-    }, [loggedInUser, inventory, getFavoriteGenres]); // Dependencies: loggedInUser, inventory, getFavoriteGenres
+    }, [loggedInUser, inventory, getFavoriteGenres]);
+
+    // Add this near your other useEffect hooks
+    useEffect(() => {
+        const fetchFallbackRecommendations = async () => {
+            if (recommendedGames.length > 0 || !loggedInUser || inventory.length === 0) return;
+
+            try {
+                // First try a direct search for racing games
+                const directSearch = await rawgService.searchGames("racing");
+
+                // Remove games the user already owns
+                const ownedIds = inventory.map(game => game.id);
+                const filteredGames = directSearch.filter(game => !ownedIds.includes(game.id));
+
+                if (filteredGames.length > 0) {
+                    setRecommendedGames(filteredGames.slice(0, 6));
+                    return;
+                }
+
+                // If that didn't work, try using tags instead of genres
+                const response = await axios.get(`https://api.rawg.io/api/games`, {
+                    params: {
+                        key: process.env.REACT_APP_RAWG_API_KEY,
+                        tags: "racing",
+                        page_size: 10,
+                    }
+                });
+
+                const tagGames = response.data.results || [];
+                console.log(`Found ${tagGames.length} games with racing tag`);
+
+                const filteredTagGames = tagGames.filter(game => !ownedIds.includes(game.id));
+                setRecommendedGames(filteredTagGames.slice(0, 6));
+
+            } catch (error) {
+                console.error("Error in fallback recommendations:", error);
+            }
+        };
+
+        fetchFallbackRecommendations();
+    }, [recommendedGames.length, loggedInUser, inventory]);
 
     // Check if a game is owned by the user
-    const isOwned = (gameId) => inventory.includes(gameId);
+    const isOwned = (gameId) => inventory.some((game) => game.id === gameId);
 
     // Check if a game is in the cart
     const isInCart = (gameId) => cartItems.some((item) => item.game_id === gameId);
