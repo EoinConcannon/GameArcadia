@@ -3,18 +3,22 @@
 }
 
 .game-card {
-    max-width: 250px; /* Adjust the max width to scale down the cards */
+    max-width: 250px;
+    /* Adjust the max width to scale down the cards */
     margin: 0 auto;
-    cursor: pointer; /* Change cursor to pointer on hover */
+    cursor: pointer;
+    /* Change cursor to pointer on hover */
 }
 
 .game-card:hover {
-    transform: scale(1.05); /* Slightly enlarge the card on hover */
+    transform: scale(1.05);
+    /* Slightly enlarge the card on hover */
     transition: transform 0.3s ease;
 }
 
 .game-card img {
-    max-height: 150px; /* Adjust the max height of the images */
+    max-height: 150px;
+    /* Adjust the max height of the images */
     object-fit: cover;
 }
 
@@ -22,7 +26,8 @@
     padding: 10px;
     display: flex;
     flex-direction: column;
-    height: 100%; /* Make all card bodies the same height */
+    height: 100%;
+    /* Make all card bodies the same height */
 }
 
 .game-card .card-title {
@@ -39,7 +44,8 @@
 
 .game-card .card-text {
     font-size: 0.9rem;
-    flex-grow: 1; /* Push the button to the bottom */
+    flex-grow: 1;
+    /* Push the button to the bottom */
     /* Ensure descriptions don't take too much space */
     overflow: hidden;
     text-overflow: ellipsis;
@@ -53,5 +59,158 @@
 .game-card .btn-primary {
     align-self: center;
     width: 100%;
-    margin-top: auto; /* Push to bottom of flex container */
+    margin-top: auto;
+    /* Push to bottom of flex container */
+}
+
+/* Add to StorePage.css */
+.search-container {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto 1.5rem;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 600px;
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: #3b0a45;
+    border: 1px solid #561a70;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+}
+
+.search-results .list-group-item {
+    background-color: #3b0a45;
+    color: #d3a4ff;
+    border-color: #561a70;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-results .list-group-item:hover {
+    background-color: #561a70;
+    color: white;
+}
+
+.genre-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.genre-link {
+    padding: 0.5rem 1rem;
+    background-color: #3b0a45;
+    color: #d3a4ff;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.genre-link:hover,
+.genre-link.active {
+    background-color: #8a2be2;
+    color: white;
+    text-decoration: none;
+}
+
+.genre-link.special-filter {
+    background-color: #561a70;
+    /* Make special filters stand out */
+    font-weight: 500;
+}
+
+.genre-link.special-filter.active {
+    background-color: #a14fdd;
+}
+
+.store-page h5 {
+    color: #d3a4ff;
+}
+
+/* Load more button */
+.store-page .btn-outline-primary {
+    color: #d3a4ff;
+    border-color: #8a2be2;
+}
+
+.store-page .btn-outline-primary:hover {
+    background-color: #8a2be2;
+    color: white;
+}
+
+.search-result-image {
+    border-radius: 3px;
+    margin-right: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .genre-link {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .genre-nav {
+        gap: 0.3rem;
+    }
+}
+
+.category-title {
+    color: #d3a4ff;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 10px;
+}
+
+.category-title:after {
+    content: '';
+    position: absolute;
+    width: 60%;
+    height: 3px;
+    background: linear-gradient(to right, #8a2be2, #d3a4ff);
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+/* Add to StorePage.css */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    background-color: #3b0a45;
+    border-radius: 10px;
+    margin: 2rem auto;
+    max-width: 500px;
+    box-shadow: 0 0 15px rgba(86, 26, 112, 0.5);
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h4 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #d3a4ff;
+}
+
+.empty-state p {
+    margin-bottom: 1.5rem;
+    color: #a14fdd;
 }

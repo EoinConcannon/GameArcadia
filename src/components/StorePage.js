@@ -1,20 +1,33 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Row, Col, Card, Button, Form } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, ListGroup, Nav, Spinner } from 'react-bootstrap'; // Add ListGroup, Nav, Spinner imports
 import { useCart } from '../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import rawgService from '../rawgService';
 import { supabase } from '../supabase';
 import '../styles/StorePage.css'; // Import custom CSS
+import axios from 'axios';
+
+const RAWG_API_URL = 'https://api.rawg.io/api';
 
 const StorePage = ({ loggedInUser }) => {
     const [inventory, setInventory] = useState([]);
     const [games, setGames] = useState([]); // State to store the list of games
     const [filteredGames, setFilteredGames] = useState([]); // State to store filtered list of games
     const [searchQuery, setSearchQuery] = useState(''); // State to track search query
+    const [searchResults, setSearchResults] = useState([]); // State for search results dropdown
     const [isLoading, setIsLoading] = useState(true); // State to track loading status
     const { cartItems, addToCart } = useCart(); // Hook to access cart context
     const navigate = useNavigate(); // Hook to navigate to different routes
+
+    const [genres, setGenres] = useState([]); // State to store genres
+    const [loadingGenres, setLoadingGenres] = useState(false); // State to track loading genres
+
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const [activeFilter, setActiveFilter] = useState('popular'); // Default to popular games
 
     // Fix: Move debounce implementation inside the component and use useCallback properly
     const debouncedSearch = useCallback((query) => {
@@ -33,27 +46,9 @@ const StorePage = ({ loggedInUser }) => {
                 setFilteredGames(games); // Reset to all games when search is empty
             }
         }, 300);
-        
+
         return () => clearTimeout(timeoutId); // Clean up on unmount or when dependencies change
     }, [searchQuery, debouncedSearch, games]);
-
-    // Fetch games from RAWG API when the component displays
-    useEffect(() => {
-        const fetchGames = async () => {
-            setIsLoading(true);
-            try {
-                const games = await rawgService.getGames();
-                setGames(games); // Update state with fetched games
-                setFilteredGames(games); // Initialize filtered games with all games
-            } catch (error) {
-                console.error('Error fetching games from RAWG API:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchGames();
-    }, []);
 
     // Fetch inventory from Supabase when the component displays
     useEffect(() => {
@@ -76,10 +71,154 @@ const StorePage = ({ loggedInUser }) => {
         fetchInventory();
     }, [loggedInUser]);
 
+    // Modify your genres useEffect to include special filters
+    useEffect(() => {
+        const fetchGenres = async () => {
+            setLoadingGenres(true);
+            try {
+                const response = await axios.get(`https://api.rawg.io/api/genres`, {
+                    params: {
+                        key: process.env.REACT_APP_RAWG_API_KEY
+                    }
+                });
+                // Add special filters first, then all games, then regular genres
+                setGenres([
+                    { id: 'popular', name: 'Popular Games', isSpecial: true },
+                    { id: 'top_rated', name: 'Top Rated', isSpecial: true },
+                    { id: 'all', name: 'All Games', isSpecial: true },
+                    ...response.data.results
+                ]);
+            } catch (error) {
+                console.error('Error fetching genres:', error);
+                // If API fails, at least provide basic filters
+                setGenres([
+                    { id: 'popular', name: 'Popular Games', isSpecial: true },
+                    { id: 'top_rated', name: 'Top Rated', isSpecial: true },
+                    { id: 'all', name: 'All Games', isSpecial: true }
+                ]);
+            } finally {
+                setLoadingGenres(false);
+            }
+        };
+
+        fetchGenres();
+    }, []);
+
+    // Modify the filterGamesByGenre function in your useEffect
+    useEffect(() => {
+        const filterGamesByGenre = async () => {
+            setIsLoading(true);
+
+            try {
+                let filteredResults = [];
+
+                // Handle special filters
+                if (!activeFilter || activeFilter === 'all') {
+                    // Get all games
+                    const allGamesData = await rawgService.getGamesPaginated(1, 40);
+                    filteredResults = allGamesData.results;
+                    setHasMore(allGamesData.hasNextPage);
+                }
+                else if (activeFilter === 'popular') {
+                    // Get popular games
+                    const popularGames = await rawgService.getPopularGames(40);
+                    filteredResults = popularGames;
+                    setHasMore(popularGames.length >= 40);
+                }
+                else if (activeFilter === 'top_rated') {
+                    // Get top rated games
+                    const response = await axios.get(`${RAWG_API_URL}/games`, {
+                        params: {
+                            key: process.env.REACT_APP_RAWG_API_KEY,
+                            ordering: '-rating',
+                            page_size: 40
+                        }
+                    });
+                    filteredResults = response.data.results || [];
+                    setHasMore(!!response.data.next);
+                }
+                else {
+                    // Get popular games by genre - modified to get higher quality results
+                    const response = await axios.get(`${RAWG_API_URL}/games`, {
+                        params: {
+                            key: process.env.REACT_APP_RAWG_API_KEY,
+                            genres: activeFilter,
+                            ordering: '-metacritic,-rating,-added', // Order by metacritic score, then rating, then popularity
+                            page_size: 40,
+                            metacritic: '60,100' // Only include games with decent metacritic scores
+                        }
+                    });
+
+                    filteredResults = response.data.results || [];
+
+                    // If we didn't get enough results with metacritic filter, try without it
+                    if (filteredResults.length < 10) {
+                        console.log(`Only found ${filteredResults.length} games with metacritic filter, trying without it`);
+                        const backupResponse = await axios.get(`${RAWG_API_URL}/games`, {
+                            params: {
+                                key: process.env.REACT_APP_RAWG_API_KEY,
+                                genres: activeFilter,
+                                ordering: '-rating,-added', // Order by rating, then popularity
+                                page_size: 40
+                            }
+                        });
+                        filteredResults = backupResponse.data.results || [];
+                    }
+
+                    setHasMore(filteredResults.length >= 40);
+                }
+
+                // Filter out games without images (these often have poor data quality)
+                filteredResults = filteredResults.filter(game => game.background_image);
+
+                setFilteredGames(filteredResults);
+                setGames(filteredResults);
+            } catch (error) {
+                console.error(`Error filtering games: ${error}`);
+                setFilteredGames([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        filterGamesByGenre();
+    }, [activeFilter]);
+
     // Handle search input change
-    const handleSearchChange = (e) => {
+    const handleSearchChange = async (e) => {
         const query = e.target.value;
         setSearchQuery(query);
+
+        if (query.trim().length > 0) {
+            try {
+                const results = await rawgService.searchGames(query);
+                // Filter results to only include games whose name starts with the search query
+                const filteredResults = results.filter((game) =>
+                    game.name.toLowerCase().startsWith(query.toLowerCase())
+                ).slice(0, 6); // Limit to 6 results
+                setSearchResults(filteredResults);
+            } catch (error) {
+                console.error('Error searching games:', error);
+            }
+        } else {
+            setSearchResults([]);
+            // Reset to all games when search is empty
+            setFilteredGames(games);
+        }
+    };
+
+    // Update handleGenreSelect to work with our new approach
+    const handleGenreSelect = (genreId, genreName) => {
+        setActiveFilter(genreId);
+        setSearchQuery('');
+        setSearchResults([]);
+        setPage(1); // Reset pagination
+    };
+
+    // Add this function to handle search result click
+    const handleSearchResultClick = (gameId) => {
+        navigate(`/game/${gameId}`);
+        setSearchResults([]); // Clear results after click
     };
 
     // Check if a game is owned by the user
@@ -93,12 +232,111 @@ const StorePage = ({ loggedInUser }) => {
         navigate(`/game/${gameId}`);
     };
 
+    const loadMoreGames = async () => {
+        setLoadingMore(true);
+        try {
+            const nextPage = page + 1;
+
+            let newGames = [];
+            let hasNextPage = false;
+
+            // Handle different filter types
+            if (activeFilter === 'all') {
+                const gamesData = await rawgService.getGamesPaginated(nextPage, 20);
+                newGames = gamesData.results;
+                hasNextPage = gamesData.hasNextPage;
+            }
+            else if (activeFilter === 'popular') {
+                // For popular games, we can use page parameter
+                const response = await axios.get(`${RAWG_API_URL}/games`, {
+                    params: {
+                        key: process.env.REACT_APP_RAWG_API_KEY,
+                        ordering: '-added',
+                        page: nextPage,
+                        page_size: 20
+                    }
+                });
+                newGames = response.data.results || [];
+                hasNextPage = !!response.data.next;
+            }
+            else if (activeFilter === 'top_rated') {
+                // For top rated games
+                const response = await axios.get(`${RAWG_API_URL}/games`, {
+                    params: {
+                        key: process.env.REACT_APP_RAWG_API_KEY,
+                        ordering: '-rating',
+                        page: nextPage,
+                        page_size: 20
+                    }
+                });
+                newGames = response.data.results || [];
+                hasNextPage = !!response.data.next;
+            }
+            else {
+                // For genre-specific games - updated to match the main filter function
+                const response = await axios.get(`${RAWG_API_URL}/games`, {
+                    params: {
+                        key: process.env.REACT_APP_RAWG_API_KEY,
+                        genres: activeFilter,
+                        ordering: '-metacritic,-rating,-added',
+                        page: nextPage,
+                        page_size: 20,
+                        metacritic: '60,100'
+                    }
+                });
+                newGames = response.data.results || [];
+                hasNextPage = !!response.data.next;
+
+                // If we didn't get enough results with metacritic filter, try without it
+                if (newGames.length < 5) {
+                    const backupResponse = await axios.get(`${RAWG_API_URL}/games`, {
+                        params: {
+                            key: process.env.REACT_APP_RAWG_API_KEY,
+                            genres: activeFilter,
+                            ordering: '-rating,-added',
+                            page: nextPage,
+                            page_size: 20
+                        }
+                    });
+                    newGames = backupResponse.data.results || [];
+                    hasNextPage = !!backupResponse.data.next;
+                }
+            }
+
+            // Filter out games without images
+            newGames = newGames.filter(game => game.background_image);
+
+            setGames(prevGames => [...prevGames, ...newGames]);
+            setFilteredGames(prevGames => [...prevGames, ...newGames]);
+            setPage(nextPage);
+            setHasMore(hasNextPage);
+        } catch (error) {
+            console.error('Error loading more games:', error);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
+
+    // Add this function to your StorePage component
+    const getCategoryTitle = () => {
+        if (!activeFilter) return 'All Games';
+
+        // For special filters
+        if (activeFilter === 'popular') return 'Popular Games';
+        if (activeFilter === 'top_rated') return 'Top Rated Games';
+        if (activeFilter === 'all') return 'All Games';
+
+        // For normal genre, find the matching genre name
+        const activeGenre = genres.find(g => g.id === activeFilter);
+        return activeGenre ? `Popular ${activeGenre.name} Games` : 'Games';
+    };
+
     return (
         <div className="store-page">
             <h2 className="text-center my-4">Store</h2>
 
             {/* Search Bar */}
-            <div className="search-bar text-center mb-4">
+            <div className="search-container position-relative mb-4">
                 <Form>
                     <Form.Control
                         type="text"
@@ -106,60 +344,147 @@ const StorePage = ({ loggedInUser }) => {
                         value={searchQuery}
                         onChange={handleSearchChange}
                         style={{
-                            maxWidth: '400px',
+                            maxWidth: '600px',
                             margin: '0 auto',
                             textAlign: 'center',
                         }}
                     />
                 </Form>
+                {searchResults.length > 0 && (
+                    <ListGroup className="search-results">
+                        {searchResults.map((game) => (
+                            <ListGroup.Item
+                                key={game.id}
+                                onClick={() => handleSearchResultClick(game.id)}
+                                className="d-flex align-items-center"
+                            >
+                                {game.background_image && (
+                                    <img
+                                        src={game.background_image}
+                                        alt=""
+                                        className="search-result-image me-2"
+                                        style={{ width: '40px', height: '30px', objectFit: 'cover' }}
+                                    />
+                                )}
+                                {game.name}
+                            </ListGroup.Item>
+                        ))}
+                    </ListGroup>
+                )}
             </div>
 
-            {isLoading ? (
-                <div className="text-center my-5">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading games...</span>
+            {/* Genre Filter */}
+            <div className="genre-filter mb-4">
+                <h5 className="text-center mb-3">Browse by Genre</h5>
+                {loadingGenres ? (
+                    <div className="text-center">
+                        <Spinner animation="border" size="sm" /> Loading genres...
                     </div>
-                    <p className="mt-3">Loading store catalog...</p>
+                ) : (
+                    <Nav className="genre-nav justify-content-center flex-wrap">
+                        {genres.map((genre) => (
+                            <Nav.Item key={genre.id}>
+                                <Nav.Link
+                                    className={`genre-link ${activeFilter === genre.id ? 'active' : ''} ${genre.isSpecial ? 'special-filter' : ''}`}
+                                    onClick={() => handleGenreSelect(genre.id, genre.name)}
+                                >
+                                    {genre.name}
+                                </Nav.Link>
+                            </Nav.Item>
+                        ))}
+                    </Nav>
+                )}
+            </div>
+
+            {!isLoading && filteredGames.length === 0 ? (
+                <div className="empty-state">
+                    <div className="empty-state-icon">🎮</div>
+                    <h4>No Games Found</h4>
+                    <p>
+                        {searchQuery
+                            ? `We couldn't find any games matching "${searchQuery}"`
+                            : `We couldn't find any games in ${getCategoryTitle().toLowerCase()}`
+                        }
+                    </p>
+                    <Button
+                        variant="outline-primary"
+                        onClick={() => {
+                            setSearchQuery('');
+                            setActiveFilter('popular');
+                        }}
+                    >
+                        Browse Popular Games
+                    </Button>
                 </div>
-            ) : filteredGames.length > 0 ? (
-                <Row xs={1} sm={2} md={3} lg={4} className="g-4">
-                    {filteredGames.map((game) => (
-                        <Col key={game.id}>
-                            <Card className="game-card" onClick={() => handleCardClick(game.id)}>
-                                <Card.Img
-                                    variant="top"
-                                    src={game.background_image || 'default-image-url'} // Replace with actual image URL field
-                                    alt={game.name}
-                                    className="img-fluid"
-                                />
-                                <Card.Body>
-                                    <Card.Title>{game.name}</Card.Title>
-                                    <Card.Text>
-                                        {game.description_raw 
-                                            ? game.description_raw.length > 100 
-                                                ? `${game.description_raw.substring(0, 100)}...` 
-                                                : game.description_raw
-                                            : 'No description available'}
-                                    </Card.Text>
-                                    <Card.Text>Rating: {game.rating}</Card.Text>
-                                    <Card.Text>Price: €19.99</Card.Text> {/* Add price */}
-                                    <Button
-                                        variant="primary"
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Prevent card click event
-                                            addToCart({ ...game, price: 19.99, game_id: game.id });
-                                        }}
-                                        disabled={isOwned(game.id) || isInCart(game.id)} // Disable button if the game is owned or in cart
-                                    >
-                                        {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
-                                    </Button>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    ))}
-                </Row>
             ) : (
-                <p className="text-center">No games found matching your search.</p>
+                <>
+                    <h3 className="category-title text-center mb-4">{getCategoryTitle()}</h3>
+                    {isLoading ? (
+                        <div className="text-center my-5">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Loading games...</span>
+                            </div>
+                            <p className="mt-3">Loading store catalog...</p>
+                        </div>
+                    ) : filteredGames.length > 0 ? (
+                        <Row xs={1} sm={2} md={3} lg={4} className="g-4">
+                            {filteredGames.map((game) => (
+                                <Col key={game.id}>
+                                    <Card className="game-card" onClick={() => handleCardClick(game.id)}>
+                                        <Card.Img
+                                            variant="top"
+                                            src={game.background_image || 'default-image-url'} // Replace with actual image URL field
+                                            alt={game.name}
+                                            className="img-fluid"
+                                        />
+                                        <Card.Body>
+                                            <Card.Title>{game.name}</Card.Title>
+                                            <Card.Text>
+                                                {game.description_raw
+                                                    ? game.description_raw.length > 100
+                                                        ? `${game.description_raw.substring(0, 100)}...`
+                                                        : game.description_raw
+                                                    : 'No description available'}
+                                            </Card.Text>
+                                            <Card.Text>Rating: {game.rating}</Card.Text>
+                                            <Card.Text>Price: €19.99</Card.Text> {/* Add price */}
+                                            <Button
+                                                variant="primary"
+                                                onClick={(e) => {
+                                                    e.stopPropagation(); // Prevent card click event
+                                                    addToCart({ ...game, price: 19.99, game_id: game.id });
+                                                }}
+                                                disabled={isOwned(game.id) || isInCart(game.id)} // Disable button if the game is owned or in cart
+                                            >
+                                                {isOwned(game.id) ? 'Owned' : isInCart(game.id) ? 'In Cart' : 'Add to Cart'}
+                                            </Button>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            ))}
+                        </Row>
+                    ) : (
+                        <p className="text-center">No games found matching your search.</p>
+                    )}
+                </>
+            )}
+
+            {!isLoading && filteredGames.length > 0 && hasMore && (
+                <div className="text-center mt-4 mb-5">
+                    <Button
+                        variant="outline-primary"
+                        onClick={loadMoreGames}
+                        disabled={loadingMore}
+                    >
+                        {loadingMore ? (
+                            <>
+                                <Spinner animation="border" size="sm" /> Loading...
+                            </>
+                        ) : (
+                            'Load More Games'
+                        )}
+                    </Button>
+                </div>
             )}
         </div>
     );

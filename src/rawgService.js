@@ -21,13 +21,13 @@ const initializeGenreSlugs = async () => {
         page_size: 50 // Get a large number of genres
       }
     });
-    
+
     // Create a mapping from genre name to slug
     const apiGenreSlugs = {};
     response.data.results.forEach(genre => {
       apiGenreSlugs[genre.name] = genre.slug;
     });
-    
+
     // Update the genreSlugs with API data, but keep our fallbacks
     genreSlugs = { ...genreSlugs, ...apiGenreSlugs };
     console.log(`Genre mapping initialized with ${Object.keys(genreSlugs).length} genres`);
@@ -43,25 +43,25 @@ initializeGenreSlugs();
 const rawgService = {
   // Method to access the current genreSlugs mapping
   getGenreSlugs: () => genreSlugs,
-  
+
   // Method to get a specific genre slug with fallbacks
   getGenreSlug: (genreName) => {
     if (!genreName) return '';
-    
+
     // Try direct match
     if (genreSlugs[genreName]) return genreSlugs[genreName];
-    
+
     // Try case-insensitive match
     const lowerGenre = genreName.toLowerCase();
     const matchKey = Object.keys(genreSlugs).find(
       key => key.toLowerCase() === lowerGenre
     );
     if (matchKey) return genreSlugs[matchKey];
-    
+
     // No match, create slug from name - remove special chars, replace spaces with hyphens
     return lowerGenre.replace(/[^\w\s]/g, '').replace(/\s+/g, '-');
   },
-  
+
   getGames: async () => {
     try {
       const response = await axios.get(`${RAWG_API_URL}/games`, {
@@ -75,18 +75,20 @@ const rawgService = {
       throw error;
     }
   },
-  getPopularGames: async () => {
+  getPopularGames: async (pageSize = 40) => {
     try {
       const response = await axios.get(`${RAWG_API_URL}/games`, {
         params: {
           key: RAWG_API_KEY,
-          ordering: '-added',
+          ordering: '-added', // Sort by most added to user libraries
+          page_size: pageSize
         },
       });
-      return response.data.results;
+
+      return response.data.results || [];
     } catch (error) {
-      console.error('Error fetching popular games from RAWG API:', error);
-      throw error;
+      console.error('Error fetching popular games:', error);
+      return [];
     }
   },
   searchGames: async (query) => {
@@ -120,9 +122,9 @@ const rawgService = {
     try {
       // Get the proper slug using our enhanced method
       const genreSlug = rawgService.getGenreSlug(genre);
-      
+
       console.log(`Looking up games for genre: ${genre} (slug: ${genreSlug})`);
-      
+
       const response = await axios.get(`${RAWG_API_URL}/games`, {
         params: {
           key: RAWG_API_KEY,
@@ -130,7 +132,7 @@ const rawgService = {
           page_size: 40,
         },
       });
-      
+
       return response.data.results || [];
     } catch (error) {
       console.error(`Error fetching games for genre ${genre}:`, error);
@@ -173,6 +175,27 @@ const rawgService = {
     } catch (error) {
       console.error('Error fetching all games from RAWG API:', error);
       return [];
+    }
+  },
+  getGamesPaginated: async (page = 1, pageSize = 20) => {
+    try {
+      const response = await axios.get(`${RAWG_API_URL}/games`, {
+        params: {
+          key: RAWG_API_KEY,
+          page: page,
+          page_size: pageSize,
+          ordering: '-rating' // Sort by highest rating first for better quality results
+        },
+      });
+
+      return {
+        results: response.data.results || [],
+        hasNextPage: !!response.data.next,
+        total: response.data.count
+      };
+    } catch (error) {
+      console.error('Error fetching paginated games:', error);
+      return { results: [], hasNextPage: false, total: 0 };
     }
   },
 };
