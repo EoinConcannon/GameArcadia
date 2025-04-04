@@ -19,13 +19,37 @@
 }
 
 .game-card .card-body {
-    padding: 10px; /* Adjust padding for the card body */
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Make all card bodies the same height */
 }
 
 .game-card .card-title {
-    font-size: 1.2rem; /* Adjust font size for the card title */
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    /* Ensure titles don't wrap too much */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .game-card .card-text {
-    font-size: 0.9rem; /* Adjust font size for the card text */
+    font-size: 0.9rem;
+    flex-grow: 1; /* Push the button to the bottom */
+    /* Ensure descriptions don't take too much space */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+/* Add consistent button styling */
+.game-card .btn-primary {
+    align-self: center;
+    width: 100%;
+    margin-top: auto; /* Push to bottom of flex container */
 }
