@@ -3,6 +3,34 @@ import axios from 'axios';
 const RAWG_API_KEY = process.env.REACT_APP_RAWG_API_KEY;
 const RAWG_API_URL = 'https://api.rawg.io/api';
 
+// Add a cache object
+const apiCache = {
+  games: new Map(),
+  genres: new Map(),
+  gameDetails: new Map(),
+  searchResults: new Map(),
+  popularGames: new Map(),
+  genreGames: new Map()
+};
+
+// Add cache expiration time (milliseconds)
+const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
+
+// Cache helper functions
+const getCachedData = (cacheKey, cache) => {
+  if (cache.has(cacheKey)) {
+    const { data, timestamp } = cache.get(cacheKey);
+    if (Date.now() - timestamp < CACHE_EXPIRY) {
+      return data;
+    }
+  }
+  return null;
+};
+
+const setCachedData = (cacheKey, data, cache) => {
+  cache.set(cacheKey, { data, timestamp: Date.now() });
+};
+
 // Initialize with some common mappings as fallback
 let genreSlugs = {
   "Racing": "racing",
@@ -105,13 +133,21 @@ const rawgService = {
       throw error;
     }
   },
+  // Replace getGameDetails with this cached version
   getGameDetails: async (gameId) => {
+    // Check cache first
+    const cachedData = getCachedData(`game_${gameId}`, apiCache.gameDetails);
+    if (cachedData) return cachedData;
+    
     try {
       const response = await axios.get(`${RAWG_API_URL}/games/${gameId}`, {
         params: {
           key: RAWG_API_KEY,
         },
       });
+      
+      // Store in cache
+      setCachedData(`game_${gameId}`, response.data, apiCache.gameDetails);
       return response.data;
     } catch (error) {
       console.error('Error fetching game details from RAWG API:', error);
@@ -197,6 +233,27 @@ const rawgService = {
       console.error('Error fetching paginated games:', error);
       return { results: [], hasNextPage: false, total: 0 };
     }
+  },
+  clearCache: (type = 'all') => {
+    switch (type) {
+      case 'games':
+        apiCache.games.clear();
+        break;
+      case 'genres':
+        apiCache.genres.clear();
+        break;
+      case 'gameDetails':
+        apiCache.gameDetails.clear();
+        break;
+      case 'searchResults':
+        apiCache.searchResults.clear();
+        break;
+      case 'all':
+      default:
+        Object.values(apiCache).forEach(cache => cache.clear());
+        break;
+    }
+    console.log(`Cache cleared: ${type}`);
   },
 };
 
