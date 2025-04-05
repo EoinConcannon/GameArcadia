@@ -328,7 +328,23 @@ const StorePage = ({ loggedInUser }) => {
 
         // For normal genre, find the matching genre name
         const activeGenre = genres.find(g => g.id === activeFilter);
-        return activeGenre ? `Popular ${activeGenre.name} Games` : 'Games';
+        return activeGenre ? `${activeGenre.name} Games` : 'Games';
+    };
+
+    // Replace the current getPlatformIcon function with this text-based version
+    const getPlatformIcon = (platformSlug) => {
+        switch (platformSlug) {
+            case 'pc': return 'PC';
+            case 'playstation': return 'PS';
+            case 'xbox': return 'XB';
+            case 'nintendo': return 'SWI';
+            case 'ios': return 'iOS';
+            case 'android': return 'AND';
+            case 'mac': return 'MAC';
+            case 'linux': return 'LNX';
+            case 'web': return 'WEB';
+            default: return '?';
+        }
     };
 
     return (
@@ -398,7 +414,7 @@ const StorePage = ({ loggedInUser }) => {
 
             {!isLoading && filteredGames.length === 0 ? (
                 <div className="empty-state">
-                    <div className="empty-state-icon">🎮</div>
+                    <div className="empty-state-icon">:(</div>
                     <h4>No Games Found</h4>
                     <p>
                         {searchQuery
@@ -437,6 +453,19 @@ const StorePage = ({ loggedInUser }) => {
                                             alt={game.name}
                                             className="img-fluid"
                                         />
+                                        {/* Add badges for release date and platform */}
+                                        <div className="game-card-badges">
+                                            {game.released && (
+                                                <span className="badge bg-dark release-date">
+                                                    {new Date(game.released).getFullYear()}
+                                                </span>
+                                            )}
+                                            {game.parent_platforms && game.parent_platforms.map(p => (
+                                                <span key={p.platform.id} className="badge bg-secondary platform-badge" title={p.platform.name}>
+                                                    {getPlatformIcon(p.platform.slug)}
+                                                </span>
+                                            ))}
+                                        </div>
                                         <Card.Body>
                                             <Card.Title>{game.name}</Card.Title>
                                             <Card.Text>
