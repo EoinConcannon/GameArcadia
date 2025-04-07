@@ -7,6 +7,8 @@ import rawgService from '../rawgService';
 import { supabase } from '../supabase';
 import '../styles/StorePage.css'; // Import custom CSS
 import axios from 'axios';
+import GameRecommender from '../GameRecommender';
+import GenreMapper from '../GenreMapper';
 
 const RAWG_API_URL = 'https://api.rawg.io/api';
 
@@ -29,6 +31,9 @@ const StorePage = ({ loggedInUser }) => {
 
     const [activeFilter, setActiveFilter] = useState('popular'); // Default to popular games
 
+    const [userInventoryDetails, setUserInventoryDetails] = useState([]);
+    const [genreMapper, setGenreMapper] = useState(null);
+
     // Fix: Move debounce implementation inside the component and use useCallback properly
     const debouncedSearch = useCallback((query) => {
         const filtered = games.filter((game) =>
@@ -50,28 +55,57 @@ const StorePage = ({ loggedInUser }) => {
         return () => clearTimeout(timeoutId); // Clean up on unmount or when dependencies change
     }, [searchQuery, debouncedSearch, games]);
 
-    // Fetch inventory from Supabase when the component displays
+    // Update the fetchInventory useEffect to get full game details for recommendations
     useEffect(() => {
         const fetchInventory = async () => {
             if (!loggedInUser) return;
 
-            const { data, error } = await supabase
-                .from('user_inventory')
-                .select('game_id')
-                .eq('user_id', loggedInUser.id);
+            try {
+                // Get basic inventory IDs
+                const { data, error } = await supabase
+                    .from('user_inventory')
+                    .select('game_id')
+                    .eq('user_id', loggedInUser.id);
 
-            if (error) {
-                console.error('Error fetching inventory:', error);
-                return;
+                if (error) {
+                    console.error('Error fetching inventory:', error);
+                    return;
+                }
+
+                // Store just the IDs for simple checks
+                setInventory(data.map((item) => item.game_id));
+
+                // For recommendations, we need full game details including genres
+                const inventoryDetails = await Promise.all(
+                    data.map(async (item) => {
+                        try {
+                            return await rawgService.getGameDetails(item.game_id);
+                        } catch (err) {
+                            console.error(`Error fetching details for game ${item.game_id}:`, err);
+                            return null;
+                        }
+                    })
+                );
+
+                // Filter out failed requests
+                const validInventoryDetails = inventoryDetails.filter(Boolean);
+                setUserInventoryDetails(validInventoryDetails);
+
+                // Initialize genre mapper with user's games for recommendations
+                if (validInventoryDetails.length > 0) {
+                    const mapper = new GenreMapper();
+                    await mapper.initializeGenreMappings(validInventoryDetails);
+                    setGenreMapper(mapper);
+                }
+            } catch (e) {
+                console.error("Error in inventory processing:", e);
             }
-
-            setInventory(data.map((item) => item.game_id)); // Store game IDs of owned games
         };
 
         fetchInventory();
     }, [loggedInUser]);
 
-    // Modify your genres useEffect to include special filters
+    // Modify your genres useEffect to add the recommended filter
     useEffect(() => {
         const fetchGenres = async () => {
             setLoadingGenres(true);
@@ -81,19 +115,20 @@ const StorePage = ({ loggedInUser }) => {
                         key: process.env.REACT_APP_RAWG_API_KEY
                     }
                 });
-                // Add special filters first, then all games, then regular genres
+                // Add recommended filter to the special filters
                 setGenres([
                     { id: 'popular', name: 'Popular Games', isSpecial: true },
                     { id: 'top_rated', name: 'Top Rated', isSpecial: true },
+                    { id: 'recommended', name: 'Recommended', isSpecial: true }, // New filter
                     { id: 'all', name: 'All Games', isSpecial: true },
                     ...response.data.results
                 ]);
             } catch (error) {
                 console.error('Error fetching genres:', error);
-                // If API fails, at least provide basic filters
                 setGenres([
                     { id: 'popular', name: 'Popular Games', isSpecial: true },
                     { id: 'top_rated', name: 'Top Rated', isSpecial: true },
+                    { id: 'recommended', name: 'Recommended', isSpecial: true }, // New filter
                     { id: 'all', name: 'All Games', isSpecial: true }
                 ]);
             } finally {
@@ -104,7 +139,7 @@ const StorePage = ({ loggedInUser }) => {
         fetchGenres();
     }, []);
 
-    // Modify the filterGamesByGenre function in your useEffect
+    // Update the filterGamesByGenre function to handle the recommended filter
     useEffect(() => {
         const filterGamesByGenre = async () => {
             setIsLoading(true);
@@ -136,6 +171,30 @@ const StorePage = ({ loggedInUser }) => {
                     });
                     filteredResults = response.data.results || [];
                     setHasMore(!!response.data.next);
+                }
+                else if (activeFilter === 'recommended') {
+                    // Get personalized recommendations if user is logged in and has games
+                    if (loggedInUser && userInventoryDetails.length > 0 && genreMapper) {
+                        const recommender = new GameRecommender(userInventoryDetails, genreMapper);
+
+                        // Get recommendations based on user's library
+                        const recommendations = await recommender.getRecommendations();
+
+                        if (recommendations.length > 0) {
+                            filteredResults = recommendations;
+                        } else {
+                            // Fallback to popular games if recommendations fail
+                            const popularGames = await rawgService.getPopularGames(40);
+                            filteredResults = popularGames;
+                        }
+                    } else {
+                        // If user has no games or isn't logged in, show popular games
+                        const popularGames = await rawgService.getPopularGames(40);
+                        filteredResults = popularGames;
+                    }
+
+                    // Recommendations don't support pagination currently
+                    setHasMore(false);
                 }
                 else {
                     // Get popular games by genre - modified to get higher quality results
@@ -171,6 +230,11 @@ const StorePage = ({ loggedInUser }) => {
                 // Filter out games without images (these often have poor data quality)
                 filteredResults = filteredResults.filter(game => game.background_image);
 
+                // Filter out owned games from recommendations
+                if (activeFilter === 'recommended') {
+                    filteredResults = filteredResults.filter(game => !inventory.includes(game.id));
+                }
+
                 setFilteredGames(filteredResults);
                 setGames(filteredResults);
             } catch (error) {
@@ -182,7 +246,7 @@ const StorePage = ({ loggedInUser }) => {
         };
 
         filterGamesByGenre();
-    }, [activeFilter]);
+    }, [activeFilter, loggedInUser, userInventoryDetails, inventory, genreMapper]);
 
     // Handle search input change
     const handleSearchChange = async (e) => {
@@ -272,6 +336,11 @@ const StorePage = ({ loggedInUser }) => {
                 newGames = response.data.results || [];
                 hasNextPage = !!response.data.next;
             }
+            else if (activeFilter === 'recommended') {
+                // Recommended doesn't support pagination currently
+                newGames = [];
+                hasNextPage = false;
+            }
             else {
                 // For genre-specific games - updated to match the main filter function
                 const response = await axios.get(`${RAWG_API_URL}/games`, {
@@ -324,6 +393,7 @@ const StorePage = ({ loggedInUser }) => {
         // For special filters
         if (activeFilter === 'popular') return 'Popular Games';
         if (activeFilter === 'top_rated') return 'Top Rated Games';
+        if (activeFilter === 'recommended') return 'Recommended For You';
         if (activeFilter === 'all') return 'All Games';
 
         // For normal genre, find the matching genre name
@@ -411,6 +481,19 @@ const StorePage = ({ loggedInUser }) => {
                     </Nav>
                 )}
             </div>
+
+            {activeFilter === 'recommended' && !loggedInUser && (
+                <div className="alert alert-info text-center mb-4">
+                    Sign in to see personalized game recommendations based on your library.
+                </div>
+            )}
+
+            {activeFilter === 'recommended' && loggedInUser && userInventoryDetails.length === 0 && (
+                <div className="alert alert-info text-center mb-4">
+                    Purchase some games to get personalized recommendations.
+                    For now, we're showing you popular titles.
+                </div>
+            )}
 
             {!isLoading && filteredGames.length === 0 ? (
                 <div className="empty-state">
