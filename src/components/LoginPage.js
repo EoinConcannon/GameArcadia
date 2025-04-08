@@ -1,14 +1,36 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
+import bcrypt from 'bcryptjs';
+import '../styles/AuthPages.css'; // Import new shared CSS
 
 const LoginPage = ({ setLoggedInUser }) => {
-    const [username, setUsername] = useState(''); // Track the username input
-    const [password, setPassword] = useState(''); // Track the password input
-    const [error, setError] = useState(''); // Track any error messages
-    const navigate = useNavigate(); // Hook to navigate to different pages
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    const handleLogin = async () => {
+    // Check for success message from signup
+    useEffect(() => {
+        if (location.state?.message) {
+            setSuccessMessage(location.state.message);
+        }
+    }, [location]);
+
+    const handleLogin = async (e) => {
+        if (e) e.preventDefault();
+
+        if (!username || !password) {
+            setError('Please enter both username and password');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
         try {
             // Fetch user data from Supabase
             const { data: users, error } = await supabase
@@ -17,60 +39,116 @@ const LoginPage = ({ setLoggedInUser }) => {
                 .eq('username', username);
 
             if (error) {
-                setError('Error fetching user data');
-                console.error('Error fetching user data:', error);
+                throw new Error('Error fetching user data');
+            }
+
+            if (!users || users.length === 0) {
+                setError('Invalid username or password');
+                setLoading(false);
                 return;
             }
 
-            // Find the user with matching username and password in supabase data
-            const user = users.find(u => u.username === username && u.password === password);
+            const user = users[0];
+            let isValidPassword = false;
 
-            if (user) {
-                setLoggedInUser(user); // Set the logged-in user state
-                localStorage.setItem('loggedInUser', JSON.stringify(user)); // Save user to local storage
-                navigate('/'); // Redirect to home page after login
+            // Check if this is a legacy plaintext password (for transition period)
+            if (user.password === password) {
+                isValidPassword = true;
+
+                // Update to hashed password for future logins
+                try {
+                    const salt = await bcrypt.genSalt(10);
+                    const hashedPassword = await bcrypt.hash(password, salt);
+
+                    await supabase
+                        .from('users')
+                        .update({ password: hashedPassword })
+                        .eq('id', user.id);
+
+                    console.log("Updated legacy plaintext password to hash");
+                } catch (hashError) {
+                    console.error("Failed to update legacy password:", hashError);
+                    // Don't prevent login if hash update fails
+                }
+            }
+            // Check if it's a hashed password
+            else if (user.password.startsWith('$2')) {
+                isValidPassword = await bcrypt.compare(password, user.password);
+            }
+
+            if (isValidPassword) {
+                // Remove password from user data before storing
+                const { password: _password, ...safeUserData } = user;
+
+                setLoggedInUser(safeUserData);
+                localStorage.setItem('loggedInUser', JSON.stringify(safeUserData));
+                navigate('/');
             } else {
                 setError('Invalid username or password');
             }
         } catch (err) {
-            setError('An error occurred during login');
             console.error('Login error:', err);
+            setError('An error occurred during login. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="d-flex justify-content-center align-items-center vh-100">
-            <div className="border rounded p-4 shadow" style={{ width: '300px' }}>
-                <h2 className="text-center">Login</h2>
-                {error && <p className="text-danger text-center">{error}</p>}
-                <form>
-                    <div className="mb-3">
-                        <label htmlFor="username" className="form-label">Username</label>
+        <div className="auth-container">
+            <div className="auth-card">
+                <h2 className="auth-title">Login</h2>
+
+                {successMessage && (
+                    <div className="alert alert-success">{successMessage}</div>
+                )}
+
+                {error && <div className="alert alert-danger">{error}</div>}
+
+                <form onSubmit={handleLogin} className="auth-form">
+                    <div className="form-group">
+                        <label htmlFor="username">Username</label>
                         <input
                             type="text"
-                            className="form-control"
                             id="username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
+                            required
+                            className="form-control"
                         />
                     </div>
-                    <div className="mb-3">
-                        <label htmlFor="password" className="form-label">Password</label>
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
                         <input
                             type="password"
-                            className="form-control"
                             id="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="form-control"
                         />
                     </div>
-                    <div className="mb-3">
-                        <button type="button" className="btn btn-primary w-100" onClick={handleLogin}>
-                            Login
+                    <div className="form-group">
+                        <button
+                            type="submit"
+                            className="btn btn-primary btn-block"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Logging in...
+                                </>
+                            ) : 'Login'}
                         </button>
                     </div>
-                    <div className="mb-3">
-                        <button type="button" className="btn btn-primary w-100" onClick={() => navigate('/signup')}>
+                    <div className="form-group">
+                        <button
+                            type="button"
+                            className="btn btn-outline-primary btn-block"
+                            onClick={() => navigate('/signup')}
+                            disabled={loading}
+                        >
                             Sign Up
                         </button>
                     </div>

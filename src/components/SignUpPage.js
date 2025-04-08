@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supabase'; // Ensure your Supabase client is initialized
+import { supabase } from '../supabase';
+import bcrypt from 'bcryptjs';
+import '../styles/AuthPages.css'; // Import shared CSS
 
 const SignUpPage = () => {
     const navigate = useNavigate();
@@ -12,126 +14,215 @@ const SignUpPage = () => {
         confirmPassword: ''
     });
 
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState({});
+    const [generalError, setGeneralError] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setUserData((prev) => ({ ...prev, [name]: value }));
+
+        // Clear specific field error when user starts typing again
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        // Validate username
+        if (!userData.username.trim()) {
+            newErrors.username = 'Username is required';
+        } else if (userData.username.length < 3) {
+            newErrors.username = 'Username must be at least 3 characters';
+        }
+
+        // Validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!userData.email.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!emailRegex.test(userData.email)) {
+            newErrors.email = 'Please enter a valid email format';
+        }
+
+        // Validate password
+        if (!userData.password) {
+            newErrors.password = 'Password is required';
+        } else if (userData.password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+        }
+
+        // Confirm passwords match
+        if (userData.password !== userData.confirmPassword) {
+            newErrors.confirmPassword = 'Passwords do not match';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async () => {
-        setError('');
-        if (!userData.username || !userData.email || !userData.password) {
-            setError('All fields are required');
-            return;
-        }
+        setGeneralError('');
 
-        if (userData.password !== userData.confirmPassword) {
-            setError('Passwords do not match');
+        // Validate form
+        if (!validateForm()) {
             return;
         }
 
         setLoading(true);
 
         try {
-            // Check if the email already exists in the database
-            const { data: existingUser, error: fetchError } = await supabase
+            // Check if username or email already exists
+            const { data: existingUsers, error: fetchError } = await supabase
                 .from('users')
-                .select('email')
-                .eq('email', userData.email);
+                .select('username, email')
+                .or(`username.eq.${userData.username},email.eq.${userData.email}`);
 
             if (fetchError) throw fetchError;
 
-            if (existingUser.length > 0) {
-                setError('Email is already in use');
+            if (existingUsers && existingUsers.length > 0) {
+                const isUsernameTaken = existingUsers.some(user => user.username === userData.username);
+                const isEmailTaken = existingUsers.some(user => user.email === userData.email);
+
+                if (isUsernameTaken) {
+                    setErrors(prev => ({ ...prev, username: 'Username already taken' }));
+                }
+                if (isEmailTaken) {
+                    setErrors(prev => ({ ...prev, email: 'Email already in use' }));
+                }
+
                 setLoading(false);
                 return;
             }
 
-            // Insert the new user into the `users` table
-            const { error: insertError } = await supabase.from('users').insert([
-                {
-                    username: userData.username,
-                    email: userData.email,
-                    password: userData.password, // Store plaintext for simplicity, but you should hash passwords
-                    role: 'user', // Default role
-                },
-            ]);
+            // Hash the password
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(userData.password, salt);
+
+            // Insert the new user with hashed password
+            const { error: insertError } = await supabase
+                .from('users')
+                .insert([
+                    {
+                        username: userData.username,
+                        email: userData.email,
+                        password: hashedPassword, // Store hashed password
+                        role: 'user',
+                        created_at: new Date()
+                    },
+                ]);
 
             if (insertError) {
-                setError('Error creating account: ' + insertError.message);
-                setLoading(false);
-                return;
+                throw insertError;
             }
 
             // Navigate to the login page on success
-            navigate('/login');
+            navigate('/login', { state: { message: 'Account created successfully! Please log in.' } });
         } catch (err) {
-            setError('An unexpected error occurred. Please try again.');
+            console.error('Error creating account:', err);
+            setGeneralError('An unexpected error occurred. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="d-flex justify-content-center align-items-center vh-100">
-            <div className="border rounded p-4 shadow" style={{ width: '300px' }}>
-                <h2 className="text-center">Sign Up</h2>
-                <form>
-                    <div className="mb-3">
-                        <label htmlFor="username" className="form-label">Enter a username</label>
+        <div className="auth-container">
+            <div className="auth-card">
+                <h2 className="auth-title">Sign Up</h2>
+
+                {generalError && <div className="alert alert-danger">{generalError}</div>}
+
+                <form className="auth-form">
+                    <div className="form-group">
+                        <label htmlFor="username">Enter a username</label>
                         <input
                             type="text"
-                            className="form-control"
+                            className={`form-control ${errors.username ? 'is-invalid' : ''}`}
                             id="username"
                             name="username"
                             value={userData.username}
                             onChange={handleChange}
                         />
+                        {errors.username && (
+                            <div className="invalid-feedback">{errors.username}</div>
+                        )}
                     </div>
-                    <div className="mb-3">
-                        <label htmlFor="email" className="form-label">Enter your email</label>
+
+                    <div className="form-group">
+                        <label htmlFor="email">Enter your email</label>
                         <input
                             type="email"
-                            className="form-control"
+                            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                             id="email"
                             name="email"
                             value={userData.email}
                             onChange={handleChange}
                         />
+                        {errors.email && (
+                            <div className="invalid-feedback">{errors.email}</div>
+                        )}
                     </div>
-                    <div className="mb-3">
-                        <label htmlFor="password" className="form-label">Enter a password</label>
+
+                    <div className="form-group">
+                        <label htmlFor="password">Enter a password</label>
                         <input
                             type="password"
-                            className="form-control"
+                            className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                             id="password"
                             name="password"
                             value={userData.password}
                             onChange={handleChange}
                         />
+                        {errors.password && (
+                            <div className="invalid-feedback">{errors.password}</div>
+                        )}
+                        <div className="form-text">
+                            Password must be at least 6 characters
+                        </div>
                     </div>
-                    <div className="mb-3">
-                        <label htmlFor="confirmPassword" className="form-label">Confirm password</label>
+
+                    <div className="form-group">
+                        <label htmlFor="confirmPassword">Confirm password</label>
                         <input
                             type="password"
-                            className="form-control"
+                            className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
                             id="confirmPassword"
                             name="confirmPassword"
                             value={userData.confirmPassword}
                             onChange={handleChange}
                         />
+                        {errors.confirmPassword && (
+                            <div className="invalid-feedback">{errors.confirmPassword}</div>
+                        )}
                     </div>
-                    {error && <div className="alert alert-danger">{error}</div>}
+
                     <button
                         type="button"
-                        className="btn btn-primary w-100"
+                        className="btn btn-primary btn-block"
                         onClick={handleSubmit}
                         disabled={loading}
                     >
-                        {loading ? 'Creating Account...' : 'Create Account'}
+                        {loading ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Creating Account...
+                            </>
+                        ) : 'Create Account'}
                     </button>
+
+                    <div className="login-link">
+                        Already have an account?
+                        {/* Fix ESLint warning by replacing <a> with button */}
+                        <button
+                            type="button"
+                            className="btn btn-link p-0 ms-1"
+                            onClick={() => navigate('/login')}
+                        >
+                            Log in
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
