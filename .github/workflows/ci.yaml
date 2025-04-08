@@ -16,15 +16,16 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
         node-version: '16'
+        cache: 'npm'
 
     - name: Install dependencies
-      run: npm install
+      run: npm ci
 
     - name: Set environment variables
       run: |
@@ -34,13 +35,26 @@ jobs:
         echo "REACT_APP_STRIPE_PUBLISHABLE_KEY=${{ secrets.REACT_APP_STRIPE_PUBLISHABLE_KEY }}" >> $GITHUB_ENV
         echo "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}" >> $GITHUB_ENV
 
+    - name: Build
+      run: npm run build
+
     - name: Start server
       run: npm run start-server &
       env:
         STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
 
     - name: Wait for server to be ready
-      run: sleep 10
+      run: |
+        timeout=30
+        until $(curl --output /dev/null --silent --head --fail http://localhost:3000) || [ $timeout -eq 0 ]; do
+          echo "Waiting for server to be ready..."
+          sleep 1
+          ((timeout--))
+        done
+        if [ $timeout -eq 0 ]; then
+          echo "Server failed to start"
+          exit 1
+        fi
 
     - name: Run tests
       run: npm test
