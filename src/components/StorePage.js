@@ -175,22 +175,103 @@ const StorePage = ({ loggedInUser }) => {
                 else if (activeFilter === 'recommended') {
                     // Get personalized recommendations if user is logged in and has games
                     if (loggedInUser && userInventoryDetails.length > 0 && genreMapper) {
-                        const recommender = new GameRecommender(userInventoryDetails, genreMapper);
+                        console.log("Getting personalized recommendations for user with", userInventoryDetails.length, "games");
 
-                        // Get recommendations based on user's library
-                        const recommendations = await recommender.getRecommendations();
+                        // Get user's favorite genres
+                        const genreCount = {};
+                        userInventoryDetails.forEach(game => {
+                            if (game.genres) {
+                                game.genres.forEach(genre => {
+                                    genreCount[genre.name] = (genreCount[genre.name] || 0) + 1;
+                                });
+                            }
+                        });
 
-                        if (recommendations.length > 0) {
-                            filteredResults = recommendations;
+                        const favoriteGenres = Object.entries(genreCount)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([genre]) => genre)
+                            .slice(0, 3); // Top 3 genres
+
+                        console.log("User's favorite genres:", favoriteGenres);
+
+                        if (favoriteGenres.length > 0) {
+                            // Try to get games for each favorite genre
+                            const genreResults = await Promise.all(
+                                favoriteGenres.map(async (genre) => {
+                                    try {
+                                        // Get games by genre with good ratings
+                                        const response = await axios.get(`${RAWG_API_URL}/games`, {
+                                            params: {
+                                                key: process.env.REACT_APP_RAWG_API_KEY,
+                                                genres: genre.toLowerCase().replace(' ', '-'),
+                                                ordering: '-rating',
+                                                page_size: 15,
+                                                metacritic: '70,100' // Games with good ratings
+                                            }
+                                        });
+                                        return response.data.results || [];
+                                    } catch (error) {
+                                        console.error(`Error fetching games for genre ${genre}:`, error);
+                                        return [];
+                                    }
+                                })
+                            );
+
+                            // Combine results, giving priority to highest ranked genres
+                            let combinedResults = [];
+                            genreResults.forEach((games, index) => {
+                                // Take more games from top genres, fewer from lower ranked genres
+                                const count = Math.max(5, 15 - (index * 5));
+                                combinedResults = [...combinedResults, ...games.slice(0, count)];
+                            });
+
+                            // Remove duplicates
+                            const seen = new Set();
+                            combinedResults = combinedResults.filter(game => {
+                                if (seen.has(game.id)) return false;
+                                seen.add(game.id);
+                                return true;
+                            });
+
+                            // If we have games, use them
+                            if (combinedResults.length > 0) {
+                                filteredResults = combinedResults;
+                                console.log(`Found ${filteredResults.length} recommendations based on user's favorite genres`);
+                            } else {
+                                // Try using the GameRecommender as backup
+                                const recommender = new GameRecommender(userInventoryDetails, genreMapper);
+                                const recommendations = await recommender.getRecommendations();
+
+                                if (recommendations && recommendations.length > 0) {
+                                    filteredResults = recommendations;
+                                    console.log(`Found ${filteredResults.length} recommendations using GameRecommender`);
+                                } else {
+                                    // Fall back to popular games if all else fails
+                                    const popularGames = await rawgService.getPopularGames(40);
+                                    filteredResults = popularGames;
+                                    console.log("Falling back to popular games for recommendations");
+                                }
+                            }
                         } else {
-                            // Fallback to popular games if recommendations fail
-                            const popularGames = await rawgService.getPopularGames(40);
-                            filteredResults = popularGames;
+                            // No favorite genres found, try the GameRecommender directly
+                            const recommender = new GameRecommender(userInventoryDetails, genreMapper);
+                            const recommendations = await recommender.getRecommendations();
+
+                            if (recommendations && recommendations.length > 0) {
+                                filteredResults = recommendations;
+                                console.log(`Found ${filteredResults.length} recommendations using GameRecommender`);
+                            } else {
+                                // Fall back to popular games if all else fails
+                                const popularGames = await rawgService.getPopularGames(40);
+                                filteredResults = popularGames;
+                                console.log("Falling back to popular games for recommendations");
+                            }
                         }
                     } else {
                         // If user has no games or isn't logged in, show popular games
                         const popularGames = await rawgService.getPopularGames(40);
                         filteredResults = popularGames;
+                        console.log("User not logged in or has no games - showing popular games");
                     }
 
                     // Recommendations don't support pagination currently
