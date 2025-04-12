@@ -109,6 +109,8 @@
     border-radius: 5px;
     font-size: 1.1rem;
     width: 100%;
+    text-align: center;
+    /* Center the text and placeholder */
 }
 
 .search-container input::placeholder {

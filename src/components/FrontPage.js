@@ -311,7 +311,19 @@ const FrontPage = ({ loggedInUser }) => {
                 {searchResults.length > 0 && (
                     <ListGroup className="search-results">
                         {searchResults.map((game) => (
-                            <ListGroup.Item key={game.id} onClick={() => handleSearchResultClick(game.id)}>
+                            <ListGroup.Item
+                                key={game.id}
+                                onClick={() => handleSearchResultClick(game.id)}
+                                className="d-flex align-items-center"
+                            >
+                                {game.background_image && (
+                                    <img
+                                        src={game.background_image}
+                                        alt=""
+                                        className="search-result-image me-2"
+                                        style={{ width: '40px', height: '30px', objectFit: 'cover' }}
+                                    />
+                                )}
                                 {game.name}
                             </ListGroup.Item>
                         ))}
