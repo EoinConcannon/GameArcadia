@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import SignUpPage from '../components/SignUpPage';
 import { supabase } from '../supabase';
@@ -10,6 +11,7 @@ jest.mock('../supabase', () => ({
         from: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
+        or: jest.fn().mockReturnThis(), 
         insert: jest.fn().mockReturnThis(),
     },
 }));
@@ -67,9 +69,13 @@ describe('SignUpPage', () => {
         fireEvent.change(screen.getByLabelText(/Enter a password/i), { target: { value: 'password123' } });
         fireEvent.change(screen.getByLabelText(/Confirm password/i), { target: { value: 'password123' } });
 
-        fireEvent.click(screen.getByRole('button', { name: /Create Account/i }));
+        await act(async () => {
+            fireEvent.click(screen.getByRole('button', { name: /Create Account/i }));
+        });
 
-        expect(await screen.findByText(/Email is already in use/i)).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText(/Email is already in use/i)).toBeInTheDocument();
+        });
     });
 
     test('creates account successfully', async () => {

@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act } from 'react';
 import '@testing-library/jest-dom/extend-expect';
 import { BrowserRouter as Router } from 'react-router-dom';
 import UserManagementPage from '../components/UserManagementPage';
@@ -87,7 +88,7 @@ describe('UserManagementPage', () => {
 
     test('renders error message when there is an error fetching users', async () => {
         supabase.from.mockReturnValueOnce({
-            select: jest.fn().mockResolvedValue({ data: null, error: 'Error fetching users' }),
+            select: jest.fn().mockResolvedValue({ data: null, error: { message: 'Error fetching users' } }),
         });
 
         await act(async () => {

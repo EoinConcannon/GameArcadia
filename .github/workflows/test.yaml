@@ -5,7 +5,6 @@ on:
     branches: [ main, master, develop ]
   pull_request:
     branches: [ main, master, develop ]
-  # Allow manual triggering from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -33,13 +32,16 @@ jobs:
         echo "REACT_APP_STRIPE_PUBLISHABLE_KEY=${{ secrets.REACT_APP_STRIPE_PUBLISHABLE_KEY }}" >> $GITHUB_ENV
         echo "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}" >> $GITHUB_ENV
 
-    # If you need a mock server for testing
-    - name: Start mock server
-      run: npm run start:mock-server &
-      # You would need to add this script to your package.json
-
+    # Mock API responses instead of using a mock server
+    - name: Setup test environment
+      run: |
+        echo "REACT_APP_MOCK_API=true" >> $GITHUB_ENV
+        echo "NODE_ENV=test" >> $GITHUB_ENV
+        
+    # Run tests with increased memory allocation and proper options
     - name: Run Jest tests
-      run: npm test -- --ci --coverage --testTimeout=10000
+      run: |
+        node --max_old_space_size=4096 node_modules/.bin/jest --ci --coverage --testTimeout=15000 --detectOpenHandles --forceExit
 
     - name: Upload test coverage
       uses: actions/upload-artifact@v4
