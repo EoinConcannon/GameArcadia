@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import bcrypt from 'bcryptjs';
-import '../styles/AuthPages.css'; // Import new shared CSS
+import '../styles/AuthPages.css';
 
 const LoginPage = ({ setLoggedInUser }) => {
     const [username, setUsername] = useState('');
@@ -10,6 +10,7 @@ const LoginPage = ({ setLoggedInUser }) => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -94,6 +95,10 @@ const LoginPage = ({ setLoggedInUser }) => {
         }
     };
 
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     return (
         <div className="auth-container">
             <div className="auth-card">
@@ -119,14 +124,24 @@ const LoginPage = ({ setLoggedInUser }) => {
                     </div>
                     <div className="form-group">
                         <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="form-control"
-                        />
+                        <div className="password-input-container">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="form-control"
+                            />
+                            <button
+                                type="button"
+                                className="password-toggle-btn"
+                                onClick={togglePasswordVisibility}
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                                {showPassword ? "👁️" : "👁️‍🗨️"}
+                            </button>
+                        </div>
                     </div>
                     <div className="form-group">
                         <button

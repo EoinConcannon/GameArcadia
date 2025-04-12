@@ -205,3 +205,42 @@
 .ms-1 {
   margin-left: 0.25rem;
 }
+
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-container .form-control {
+  flex: 1;
+  padding-right: 40px;
+  /* Make room for the icon button */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #d3a4ff;
+  cursor: pointer;
+  padding: 0;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.password-toggle-btn:hover {
+  background-color: rgba(211, 164, 255, 0.1);
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.25);
+}

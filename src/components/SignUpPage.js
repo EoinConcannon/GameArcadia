@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 import bcrypt from 'bcryptjs';
-import '../styles/AuthPages.css'; // Import shared CSS
+import '../styles/AuthPages.css';
 
 const SignUpPage = () => {
     const navigate = useNavigate();
@@ -17,6 +17,8 @@ const SignUpPage = () => {
     const [errors, setErrors] = useState({});
     const [generalError, setGeneralError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -127,6 +129,14 @@ const SignUpPage = () => {
         }
     };
 
+    const togglePasswordVisibility = (field) => {
+        if (field === 'password') {
+            setShowPassword(!showPassword);
+        } else if (field === 'confirmPassword') {
+            setShowConfirmPassword(!showConfirmPassword);
+        }
+    };
+
     return (
         <div className="auth-container">
             <div className="auth-card">
@@ -167,14 +177,24 @@ const SignUpPage = () => {
 
                     <div className="form-group">
                         <label htmlFor="password">Enter a password</label>
-                        <input
-                            type="password"
-                            className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                            id="password"
-                            name="password"
-                            value={userData.password}
-                            onChange={handleChange}
-                        />
+                        <div className="password-input-container">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                                id="password"
+                                name="password"
+                                value={userData.password}
+                                onChange={handleChange}
+                            />
+                            <button
+                                type="button"
+                                className="password-toggle-btn"
+                                onClick={() => togglePasswordVisibility('password')}
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                                {showPassword ? "👁️" : "👁️‍🗨️"}
+                            </button>
+                        </div>
                         {errors.password && (
                             <div className="invalid-feedback">{errors.password}</div>
                         )}
@@ -185,14 +205,24 @@ const SignUpPage = () => {
 
                     <div className="form-group">
                         <label htmlFor="confirmPassword">Confirm password</label>
-                        <input
-                            type="password"
-                            className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            value={userData.confirmPassword}
-                            onChange={handleChange}
-                        />
+                        <div className="password-input-container">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                value={userData.confirmPassword}
+                                onChange={handleChange}
+                            />
+                            <button
+                                type="button"
+                                className="password-toggle-btn"
+                                onClick={() => togglePasswordVisibility('confirmPassword')}
+                                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                            >
+                                {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
+                            </button>
+                        </div>
                         {errors.confirmPassword && (
                             <div className="invalid-feedback">{errors.confirmPassword}</div>
                         )}
@@ -214,7 +244,6 @@ const SignUpPage = () => {
 
                     <div className="login-link">
                         Already have an account?
-                        {/* Fix ESLint warning by replacing <a> with button */}
                         <button
                             type="button"
                             className="btn btn-link p-0 ms-1"
