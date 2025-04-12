@@ -9,6 +9,7 @@ const OrderHistory = ({ loggedInUser }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [ordersPerPage] = useState(10);
+    const [totalSpent, setTotalSpent] = useState(0);
 
     useEffect(() => {
         let isMounted = true;
@@ -30,6 +31,10 @@ const OrderHistory = ({ loggedInUser }) => {
                     throw new Error(orderHistoryError.message);
                 }
 
+                // Calculate total spent using fixed price of €19.99 per game
+                const fixedPrice = 19.99;
+                const total = orderHistoryData.length * fixedPrice;
+
                 // Fetch game details with proper error handling
                 const orderHistoryDetails = await Promise.all(
                     orderHistoryData.map(async (order) => {
@@ -38,6 +43,7 @@ const OrderHistory = ({ loggedInUser }) => {
                             return {
                                 ...gameDetails,
                                 purchased_at: order.purchased_at,
+                                purchase_price: fixedPrice, // Use fixed price for all games
                                 // Fallbacks for missing data
                                 name: gameDetails?.name || 'Unknown Game',
                                 background_image: gameDetails?.background_image || '/default-game.png'
@@ -48,6 +54,7 @@ const OrderHistory = ({ loggedInUser }) => {
                             return {
                                 name: `Game (ID: ${order.game_id})`,
                                 purchased_at: order.purchased_at,
+                                purchase_price: fixedPrice,
                                 error: true
                             };
                         }
@@ -56,6 +63,7 @@ const OrderHistory = ({ loggedInUser }) => {
 
                 if (isMounted) {
                     setOrderHistory(orderHistoryDetails);
+                    setTotalSpent(total);
                 }
             } catch (error) {
                 console.error('Error fetching order history:', error);
@@ -97,7 +105,7 @@ const OrderHistory = ({ loggedInUser }) => {
         return grouped;
     };
 
-    // Change page - We'll actually use this function now
+    // Change page
     const paginate = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
@@ -112,6 +120,17 @@ const OrderHistory = ({ loggedInUser }) => {
         <div className="order-history-page container my-5">
             <h2 className="text-center mb-4">Order History</h2>
             {error && <div className="alert alert-danger text-center">{error}</div>}
+
+            {/* Total Spent Display */}
+            {!isLoading && orderHistory.length > 0 && (
+                <div className="total-spent-card mb-4">
+                    <div className="total-spent-content">
+                        <div className="total-spent-label">Total Spent</div>
+                        <div className="total-spent-amount">€{totalSpent.toFixed(2)}</div>
+                        <div className="total-spent-count">{orderHistory.length} game{orderHistory.length !== 1 ? 's' : ''} purchased</div>
+                    </div>
+                </div>
+            )}
 
             {isLoading ? (
                 <div className="loading-container">
@@ -152,6 +171,7 @@ const OrderHistory = ({ loggedInUser }) => {
                                                 <div className="purchase-label">Purchased:</div>
                                                 <div className="purchase-date">{new Date(order.purchased_at).toLocaleDateString()}</div>
                                                 <div className="purchase-time">{new Date(order.purchased_at).toLocaleTimeString()}</div>
+                                                <div className="purchase-price">€{order.purchase_price.toFixed(2)}</div>
                                             </div>
                                         </div>
                                     </li>
@@ -160,7 +180,6 @@ const OrderHistory = ({ loggedInUser }) => {
                         </div>
                     ))}
 
-                    {/* Using the paginate function */}
                     {orderHistory.length > ordersPerPage && (
                         <nav aria-label="Order history pagination">
                             <ul className="pagination justify-content-center">

@@ -206,3 +206,64 @@
     color: #03dac6;
     /* From your button color */
 }
+
+/* Total Spent Card */
+.total-spent-card {
+    background-color: #4c1269;
+    /* Slightly lighter than the dark violet background */
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+    /* Electric Violet glow */
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.total-spent-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #8a2be2, #03dac6);
+    /* Electric Violet to Teal gradient */
+}
+
+.total-spent-content {
+    position: relative;
+    z-index: 1;
+}
+
+.total-spent-label {
+    font-size: 1rem;
+    color: #d3a4ff;
+    /* Soft Neon Glow Text */
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.total-spent-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    /* White */
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+    /* Electric Violet glow */
+}
+
+.total-spent-count {
+    font-size: 0.9rem;
+    color: #a14fdd;
+    /* Neon Pink */
+}
+
+/* Add this for the purchase price display in each order item */
+.purchase-price {
+    margin-top: 5px;
+    font-weight: 600;
+    color: #03dac6;
+    /* Teal - to highlight the price */
+}
