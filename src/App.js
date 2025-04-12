@@ -13,6 +13,7 @@ import UserManagementPage from './components/UserManagementPage';
 import AdminRoute from './components/AdminRoute';
 import CheckOutPage from './components/CheckOutPage';
 import GameDetailsPage from './components/GameDetailsPage';
+import UserInfoPage from './components/UserInfoPage';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Nav from 'react-bootstrap/Nav';
@@ -113,6 +114,7 @@ function App() {
               path="/game/:gameId"
               element={<GameDetailsPage loggedInUser={loggedInUser} />}
             />
+            <Route path="/user-info" element={<UserInfoPage loggedInUser={loggedInUser} setLoggedInUser={setLoggedInUser} />} />
           </Routes>
         </div>
 

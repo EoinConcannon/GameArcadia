@@ -1,0 +1,126 @@
+.user-info-page {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #d3a4ff;
+    /* Soft Neon Glow Text - matching your scheme */
+}
+
+.user-info-page h2 {
+    color: #d3a4ff;
+    /* Soft Neon Glow Text */
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+/* Ensure the card does not expand or become clickable */
+.user-details-card {
+    background-color: #3b0a45;
+    /* Dark Violet - matching your other cards */
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #561a70;
+    /* Rich Magenta Shadow - from your App.css */
+    cursor: default;
+    /* Prevent the cursor from showing as clickable */
+    transition: none;
+    /* Disable hover effects */
+    color: #d3a4ff;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.user-details-card .card-title {
+    color: #ffffff;
+    /* White text for title */
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.user-details-card .card-text {
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+}
+
+.user-details-card:hover {
+    transform: none;
+    /* Prevent the card from expanding */
+}
+
+/* Style for input fields when editing */
+.edit-input {
+    color: #ffffff;
+    /* Make the text white */
+    background-color: #3b0a45;
+    /* Dark background for better contrast */
+    border: 1px solid #561a70;
+    /* Add a border for better visibility */
+    padding: 0.5rem;
+    border-radius: 5px;
+}
+
+.edit-input::placeholder {
+    color: #d3a4ff;
+    /* Soft neon glow for placeholder text */
+}
+
+/* Style for labels */
+form .form-label {
+    color: #ffffff;
+    /* Bright white color for labels */
+    font-weight: bold;
+    /* Make the labels bold for better visibility */
+    font-size: 1rem;
+    /* Slightly increase the font size */
+    margin-bottom: 0.5rem;
+    text-align: left;
+    display: block;
+}
+
+/* Button styling to match your theme */
+.btn-primary {
+    background-color: #8a2be2;
+    /* Electric Violet */
+    border-color: #8a2be2;
+}
+
+.btn-primary:hover {
+    background-color: #9b4dff;
+    border-color: #9b4dff;
+}
+
+.btn-success {
+    background-color: #03dac6;
+    /* Teal accent from your scheme */
+    border-color: #03dac6;
+}
+
+.btn-success:hover {
+    background-color: #00f7de;
+    border-color: #00f7de;
+}
+
+.btn-danger {
+    background-color: #ff0266;
+    /* Bright Pink - for danger/error */
+    border-color: #ff0266;
+}
+
+.btn-danger:hover {
+    background-color: #ff3385;
+    border-color: #ff3385;
+}
+
+.text-muted {
+    color: #a14fdd !important;
+    /* Neon Pink from your hover states */
+}
+
+/* For validation errors */
+.invalid-feedback {
+    color: #ff0266;
+    /* Bright Pink for errors */
+    text-align: left;
+}
