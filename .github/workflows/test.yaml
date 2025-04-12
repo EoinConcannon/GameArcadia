@@ -37,6 +37,11 @@ jobs:
       run: |
         echo "REACT_APP_MOCK_API=true" >> $GITHUB_ENV
         echo "NODE_ENV=test" >> $GITHUB_ENV
+
+    # Add Jest configuration
+    - name: Create Jest config
+      run: |
+        echo '{"testEnvironment": "jsdom", "collectCoverageFrom": ["src/**/*.{js,jsx}", "!src/index.js"]}' > jest.config.json
         
     # Run tests with increased memory allocation and proper options
     - name: Run Jest tests
