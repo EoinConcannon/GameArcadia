@@ -26,6 +26,36 @@ describe('AdminPage Component', () => {
         expect(screen.getByText(/Access Denied/i)).toBeInTheDocument();
     });
 
+    test('renders "Access Denied" if no user is logged in', () => {
+        render(
+            <BrowserRouter>
+                <AdminPage loggedInUser={null} />
+            </BrowserRouter>
+        );
+
+        expect(screen.getByText(/Access Denied/i)).toBeInTheDocument();
+    });
+
+    test('renders "Access Denied" if user role is undefined', () => {
+        render(
+            <BrowserRouter>
+                <AdminPage loggedInUser={{}} />
+            </BrowserRouter>
+        );
+
+        expect(screen.getByText(/Access Denied/i)).toBeInTheDocument();
+    });
+
+    test('renders admin page title when user is an admin', () => {
+        render(
+            <BrowserRouter>
+                <AdminPage loggedInUser={{ role: 'admin' }} />
+            </BrowserRouter>
+        );
+
+        expect(screen.getByText(/Admin Page/i)).toBeInTheDocument();
+    });
+
     test('renders admin buttons when user is an admin', () => {
         render(
             <BrowserRouter>
@@ -59,5 +89,20 @@ describe('AdminPage Component', () => {
         const userButton = screen.getByText(/User Management/i);
         fireEvent.click(userButton);
         expect(mockedNavigate).toHaveBeenCalledWith('/user-management');
+    });
+
+    test('admin buttons have the correct CSS classes', () => {
+        render(
+            <BrowserRouter>
+                <AdminPage loggedInUser={{ role: 'admin' }} />
+            </BrowserRouter>
+        );
+
+        const buttons = screen.getAllByRole('button');
+        buttons.forEach(button => {
+            expect(button).toHaveClass('btn');
+            expect(button).toHaveClass('btn-primary');
+            expect(button).toHaveClass('me-2');
+        });
     });
 });
