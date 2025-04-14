@@ -76,7 +76,7 @@ const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
 
                 alert('Your purchase was successful!');
                 clearCart();
-                navigate('/');
+                navigate('/profile');
             }
         } catch (err) {
             console.error('Unexpected error during purchase:', err);
