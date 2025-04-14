@@ -90,7 +90,7 @@ function App() {
             <Route path="/login" element={<LoginPage setLoggedInUser={setLoggedInUser} />} />
             <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} setLoggedInUser={setLoggedInUser} />} />
             <Route path="/order-history" element={<OrderHistory loggedInUser={loggedInUser} />} />
-            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/signup" element={<SignUpPage setLoggedInUser={setLoggedInUser} />} />
             <Route path="/store" element={<StorePage loggedInUser={loggedInUser} />} />
             <Route path="/cart" element={<CartPage loggedInUser={loggedInUser} />} />
             <Route path="/checkout" element={<CheckOutPage loggedInUser={loggedInUser} />} />

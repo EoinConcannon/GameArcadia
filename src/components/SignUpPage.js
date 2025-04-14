@@ -4,7 +4,7 @@ import { supabase } from '../supabase';
 import bcrypt from 'bcryptjs';
 import '../styles/AuthPages.css';
 
-const SignUpPage = () => {
+const SignUpPage = ({ setLoggedInUser }) => {
     const navigate = useNavigate();
 
     const [userData, setUserData] = useState({
@@ -103,7 +103,7 @@ const SignUpPage = () => {
             const hashedPassword = await bcrypt.hash(userData.password, salt);
 
             // Insert the new user with hashed password
-            const { error: insertError } = await supabase
+            const { data: newUserData, error: insertError } = await supabase
                 .from('users')
                 .insert([
                     {
@@ -113,14 +113,29 @@ const SignUpPage = () => {
                         role: 'user',
                         created_at: new Date()
                     },
-                ]);
+                ])
+                .select(); // Return the inserted data
 
             if (insertError) {
                 throw insertError;
             }
 
-            // Navigate to the login page on success
-            navigate('/login', { state: { message: 'Account created successfully! Please log in.' } });
+            if (newUserData && newUserData.length > 0) {
+                // Auto-login the user after successful signup
+                const newUser = newUserData[0];
+
+                // Remove password from user data before storing
+                const { password: _password, ...safeUserData } = newUser;
+
+                // Update login state
+                setLoggedInUser(safeUserData);
+                localStorage.setItem('loggedInUser', JSON.stringify(safeUserData));
+
+                // Navigate to homepage
+                navigate('/');
+            } else {
+                throw new Error('Failed to retrieve new user data');
+            }
         } catch (err) {
             console.error('Error creating account:', err);
             setGeneralError('An unexpected error occurred. Please try again.');
