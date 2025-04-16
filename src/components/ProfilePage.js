@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabase';
 import { Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
-import rawgService from '../rawgService'; // Import the RAWG service
+import rawgService from '../rawgService'; 
 import '../styles/ProfilePage.css';
 
 const ProfilePage = ({ loggedInUser, setLoggedInUser }) => {
