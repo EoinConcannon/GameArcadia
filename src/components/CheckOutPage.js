@@ -89,7 +89,7 @@ const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
     return (
         <div className="checkout-card">
             <h3 className="mb-3">Payment Details</h3>
-            <form onSubmit={handlePurchase}>
+            <form onSubmit={handlePurchase} role="form">
                 <div className="mb-3">
                     <CardElement
                         options={{

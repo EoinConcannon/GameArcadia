@@ -4,19 +4,62 @@ import '@testing-library/jest-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
 import CheckOutPage from '../components/CheckOutPage';
 import { useCart } from '../contexts/CartContext';
-import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
+import { supabase } from '../supabase';
+import { useStripe, useElements } from '@stripe/react-stripe-js'; // Add this import
 
-// Mock the useCart hook
+// Mock the modules
 jest.mock('../contexts/CartContext', () => ({
     useCart: jest.fn(),
 }));
 
-// Mock the useStripe and useElements hooks
+// Mock Stripe components and hooks
 jest.mock('@stripe/react-stripe-js', () => ({
     useStripe: jest.fn(),
     useElements: jest.fn(),
-    CardElement: jest.fn().mockImplementation(() => <div>Card Element</div>),
+    CardElement: function CardElement(props) {
+        return <div data-testid="card-element">Card Element</div>;
+    },
+    Elements: ({ children }) => children
 }));
+
+// Mock stripePromise
+jest.mock('../stripe', () => ({
+    __esModule: true,
+    default: 'mock-stripe-promise'
+}));
+
+// Create a mock navigate function
+const mockNavigate = jest.fn();
+
+// Mock react-router-dom
+jest.mock('react-router-dom', () => ({
+    ...jest.requireActual('react-router-dom'),
+    useNavigate: () => mockNavigate,
+}));
+
+// Create proper Supabase mock
+jest.mock('../supabase', () => {
+    const insertMock = jest.fn().mockResolvedValue({ error: null });
+    const fromMock = jest.fn().mockReturnValue({
+        insert: insertMock
+    });
+
+    return {
+        supabase: {
+            from: fromMock
+        }
+    };
+});
+
+// Mock fetch for the payment intent
+global.fetch = jest.fn().mockImplementation(() =>
+    Promise.resolve({
+        json: () => Promise.resolve({ clientSecret: 'test-secret' }),
+    })
+);
+
+// Mock alert
+global.alert = jest.fn();
 
 const mockLoggedInUser = {
     id: 'user-id',
@@ -29,6 +72,11 @@ const mockCartItems = [
     { game_id: 'game-id-2', name: 'Test Game 2', price: 29.99 },
 ];
 
+// Create shared mock instances
+const mockConfirmCardPayment = jest.fn();
+const mockStripe = { confirmCardPayment: mockConfirmCardPayment };
+const mockElements = { getElement: jest.fn().mockReturnValue({}) };
+
 describe('CheckOutPage', () => {
     beforeEach(() => {
         useCart.mockReturnValue({
@@ -36,17 +84,12 @@ describe('CheckOutPage', () => {
             clearCart: jest.fn(),
         });
 
-        useStripe.mockReturnValue({
-            confirmCardPayment: jest.fn().mockResolvedValue({ paymentIntent: { status: 'succeeded' } }),
-        });
+        // Always return the same mock instances
+        useStripe.mockReturnValue(mockStripe);
+        useElements.mockReturnValue(mockElements);
 
-        useElements.mockReturnValue({
-            getElement: jest.fn().mockReturnValue({}),
-        });
-    });
-
-    afterEach(() => {
         jest.clearAllMocks();
+        mockConfirmCardPayment.mockReset();
     });
 
     test('renders checkout page with cart items and total price', () => {
@@ -57,8 +100,9 @@ describe('CheckOutPage', () => {
         );
 
         expect(screen.getByText('Checkout')).toBeInTheDocument();
-        expect(screen.getByText('Total: €49.98')).toBeInTheDocument();
-        expect(screen.getByText('Card Element')).toBeInTheDocument();
+        expect(screen.getByText('Total')).toBeInTheDocument();
+        expect(screen.getByText('€49.98')).toBeInTheDocument();
+        expect(screen.getByTestId('card-element')).toBeInTheDocument();
     });
 
     test('shows alert when trying to purchase with empty cart', async () => {
@@ -66,8 +110,6 @@ describe('CheckOutPage', () => {
             cartItems: [],
             clearCart: jest.fn(),
         });
-
-        window.alert = jest.fn();
 
         render(
             <Router>
@@ -79,13 +121,11 @@ describe('CheckOutPage', () => {
         fireEvent.click(confirmButton);
 
         await waitFor(() => {
-            expect(window.alert).toHaveBeenCalledWith('Your cart is empty!');
+            expect(global.alert).toHaveBeenCalledWith('Your cart is empty!');
         });
     });
 
     test('shows alert when trying to purchase without being logged in', async () => {
-        window.alert = jest.fn();
-
         render(
             <Router>
                 <CheckOutPage loggedInUser={null} />
@@ -96,17 +136,15 @@ describe('CheckOutPage', () => {
         fireEvent.click(confirmButton);
 
         await waitFor(() => {
-            expect(window.alert).toHaveBeenCalledWith('You must be logged in to make a purchase.');
+            expect(global.alert).toHaveBeenCalledWith('You must be logged in to make a purchase.');
         });
     });
 
     test('handles successful purchase', async () => {
-        const { clearCart } = useCart();
-        const mockNavigate = jest.fn();
-        jest.mock('react-router-dom', () => ({
-            ...jest.requireActual('react-router-dom'),
-            useNavigate: () => mockNavigate,
-        }));
+        // Setup successful payment mock
+        mockConfirmCardPayment.mockResolvedValue({
+            paymentIntent: { status: 'succeeded' }
+        });
 
         render(
             <Router>
@@ -114,23 +152,40 @@ describe('CheckOutPage', () => {
             </Router>
         );
 
-        const confirmButton = screen.getByText('Confirm Purchase');
-        fireEvent.click(confirmButton);
+        // Get the form element instead of the button
+        const form = screen.getByRole('form'); // Add role="form" to the form in your component or use a different selector
 
+        // Submit the form directly instead of clicking the button
+        fireEvent.submit(form);
+
+        // Wait for all async operations to complete
         await waitFor(() => {
-            expect(screen.getByText('Processing...')).toBeInTheDocument();
+            expect(mockConfirmCardPayment).toHaveBeenCalled();
         });
 
-        await waitFor(() => {
-            expect(clearCart).toHaveBeenCalled();
-            expect(mockNavigate).toHaveBeenCalledWith('/');
-            expect(window.alert).toHaveBeenCalledWith('Your purchase was successful!');
-        });
+        // Rest of the test remains the same...
+        expect(global.fetch).toHaveBeenCalledWith(
+            'http://localhost:3001/api/create-payment-intent',
+            expect.objectContaining({
+                method: 'POST',
+                headers: expect.objectContaining({
+                    'Content-Type': 'application/json',
+                }),
+                body: JSON.stringify({ items: mockCartItems }),
+            })
+        );
+
+        expect(supabase.from).toHaveBeenCalledWith('user_inventory');
+        expect(global.alert).toHaveBeenCalledWith('Your purchase was successful!');
+        expect(useCart().clearCart).toHaveBeenCalled();
+        expect(mockNavigate).toHaveBeenCalledWith('/profile');
     });
 
     test('handles payment error', async () => {
-        useStripe.mockReturnValueOnce({
-            confirmCardPayment: jest.fn().mockResolvedValue({ error: { message: 'Payment failed' } }),
+        // Setup error response for this specific test
+        const errorMessage = 'Payment failed';
+        mockConfirmCardPayment.mockResolvedValue({
+            error: { message: errorMessage }
         });
 
         render(
@@ -139,11 +194,21 @@ describe('CheckOutPage', () => {
             </Router>
         );
 
-        const confirmButton = screen.getByText('Confirm Purchase');
-        fireEvent.click(confirmButton);
+        // Get the form element instead of the button
+        const form = screen.getByRole('form');
 
+        // Submit the form directly
+        fireEvent.submit(form);
+
+        // First wait for the card payment to be called
         await waitFor(() => {
-            expect(screen.getByText('Payment failed')).toBeInTheDocument();
+            expect(mockConfirmCardPayment).toHaveBeenCalled();
+        });
+
+        // Then wait for error to appear in DOM
+        await waitFor(() => {
+            const errorElement = screen.getByText(errorMessage);
+            expect(errorElement).toBeInTheDocument();
         });
     });
 });
