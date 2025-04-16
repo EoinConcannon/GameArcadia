@@ -151,29 +151,126 @@ describe('CheckOutPage', () => {
                 <CheckOutPage loggedInUser={mockLoggedInUser} />
             </Router>
         );
+        test('handles case when clientSecret is missing from response', async () => {
+            // Override fetch mock to return empty object
+            global.fetch.mockImplementationOnce(() =>
+                Promise.resolve({
+                    json: () => Promise.resolve({}) // No clientSecret
+                })
+            );
 
-        // Get the form element instead of the button
-        const form = screen.getByRole('form'); // Add role="form" to the form in your component or use a different selector
+            console.error = jest.fn(); // Mock console.error
 
-        // Submit the form directly instead of clicking the button
-        fireEvent.submit(form);
+            render(
+                <Router>
+                    <CheckOutPage loggedInUser={mockLoggedInUser} />
+                </Router>
+            );
 
-        // Wait for all async operations to complete
-        await waitFor(() => {
-            expect(mockConfirmCardPayment).toHaveBeenCalled();
+            const form = screen.getByTestId('checkout-form');
+            fireEvent.submit(form);
+
+            await waitFor(() => {
+                expect(global.fetch).toHaveBeenCalledWith(
+                    'http://localhost:3001/api/create-payment-intent',
+                    expect.objectContaining({
+                        method: 'POST',
+                        headers: expect.objectContaining({
+                            'Content-Type': 'application/json',
+                        }),
+                    })
+                );
+            });
+
+            await waitFor(() => {
+                expect(console.error).toHaveBeenCalled();
+                expect(global.alert).toHaveBeenCalledWith('An unexpected error occurred.');
+            });
         });
 
-        // Rest of the test remains the same...
-        expect(global.fetch).toHaveBeenCalledWith(
-            'http://localhost:3001/api/create-payment-intent',
-            expect.objectContaining({
-                method: 'POST',
-                headers: expect.objectContaining({
-                    'Content-Type': 'application/json',
-                }),
-                body: JSON.stringify({ items: mockCartItems }),
-            })
-        );
+        test('handles error when adding items to user inventory', async () => {
+            // Setup successful payment
+            mockConfirmCardPayment.mockResolvedValue({
+                paymentIntent: { status: 'succeeded' }
+            });
+
+            // Setup error from Supabase
+            const supabaseError = { message: 'Database error' };
+            jest.spyOn(supabase.from('user_inventory'), 'insert')
+                .mockResolvedValueOnce({ error: supabaseError });
+
+            render(
+                <Router>
+                    <CheckOutPage loggedInUser={mockLoggedInUser} />
+                </Router>
+            );
+
+            const form = screen.getByTestId('checkout-form');
+            fireEvent.submit(form);
+
+            await waitFor(() => {
+                expect(mockConfirmCardPayment).toHaveBeenCalled();
+            });
+
+            await waitFor(() => {
+                expect(supabase.from).toHaveBeenCalledWith('user_inventory');
+                expect(global.alert).toHaveBeenCalledWith('There was an error processing your purchase.');
+            });
+        });
+
+        test('handles network error during fetch request', async () => {
+            // Override fetch mock to throw network error
+            global.fetch.mockImplementationOnce(() =>
+                Promise.reject(new Error('Network error'))
+            );
+
+            console.error = jest.fn(); // Mock console.error
+
+            render(
+                <Router>
+                    <CheckOutPage loggedInUser={mockLoggedInUser} />
+                </Router>
+            );
+
+            const form = screen.getByTestId('checkout-form');
+            fireEvent.submit(form);
+
+            await waitFor(() => {
+                expect(console.error).toHaveBeenCalled();
+                expect(global.alert).toHaveBeenCalledWith('An unexpected error occurred.');
+            });
+        });
+
+        test('disables purchase button while processing', async () => {
+            // Make the confirmCardPayment take some time
+            mockConfirmCardPayment.mockImplementation(() =>
+                new Promise(resolve => setTimeout(() =>
+                    resolve({ paymentIntent: { status: 'succeeded' } }), 100)
+                )
+            );
+
+            render(
+                <Router>
+                    <CheckOutPage loggedInUser={mockLoggedInUser} />
+                </Router>
+            );
+
+            const form = screen.getByTestId('checkout-form');
+            const button = screen.getByText('Confirm Purchase');
+
+            expect(button).not.toBeDisabled();
+
+            fireEvent.submit(form);
+
+            await waitFor(() => {
+                expect(button).toHaveTextContent('Processing...');
+                expect(button).toBeDisabled();
+            });
+
+            await waitFor(() => {
+                expect(global.alert).toHaveBeenCalledWith('Your purchase was successful!');
+            });
+        });
 
         expect(supabase.from).toHaveBeenCalledWith('user_inventory');
         expect(global.alert).toHaveBeenCalledWith('Your purchase was successful!');
@@ -194,8 +291,8 @@ describe('CheckOutPage', () => {
             </Router>
         );
 
-        // Get the form element instead of the button
-        const form = screen.getByRole('form');
+        // Get the form element using the test ID
+        const form = screen.getByTestId('checkout-form');
 
         // Submit the form directly
         fireEvent.submit(form);
