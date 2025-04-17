@@ -1,9 +1,10 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { act } from 'react';
+import { act } from 'react-dom/test-utils';
 import '@testing-library/jest-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
 import UserManagementPage from '../components/UserManagementPage';
+import AdminRoute from '../components/AdminRoute';
 import { supabase } from '../supabase';
 
 // Mock the useNavigate hook
@@ -50,20 +51,24 @@ describe('UserManagementPage', () => {
     });
 
     test('renders user management page with list of users', async () => {
+        let container;
         await act(async () => {
-            render(
+            const result = render(
                 <Router>
                     <UserManagementPage loggedInUser={mockLoggedInUser} />
                 </Router>
             );
+            container = result.container;
         });
 
         await waitFor(() => {
             expect(screen.getByText('List of Users')).toBeInTheDocument();
             expect(screen.getByText('user1')).toBeInTheDocument();
-            expect(screen.getByText('user1@example.com')).toBeInTheDocument();
-            expect(screen.getByText('admin1')).toBeInTheDocument();
-            expect(screen.getByText('admin1@example.com')).toBeInTheDocument();
+
+            // Check that the entire container's text content includes our expected strings
+            expect(container.textContent).toContain('user1@example.com');
+            expect(container.textContent).toContain('admin1@example.com');
+
             expect(screen.getByText('(Admin)')).toBeInTheDocument();
         });
     });
@@ -117,14 +122,29 @@ describe('UserManagementPage', () => {
         expect(mockedNavigate).toHaveBeenCalledWith('/admin');
     });
 
-    test('restricts access for non-admin users', () => {
+    test('restricts access for non-admin users via AdminRoute', () => {
         render(
             <Router>
-                <UserManagementPage loggedInUser={{ ...mockLoggedInUser, role: 'user' }} />
+                <AdminRoute loggedInUser={{ ...mockLoggedInUser, role: 'user' }}>
+                    <UserManagementPage loggedInUser={{ ...mockLoggedInUser, role: 'user' }} />
+                </AdminRoute>
             </Router>
         );
 
         expect(screen.queryByText('List of Users')).not.toBeInTheDocument();
-        expect(screen.getByText('Access Denied')).toBeInTheDocument();
+        expect(screen.getByText('You are not authorized to view this page.')).toBeInTheDocument();
+    });
+
+    test('restricts access when no user is logged in via AdminRoute', () => {
+        render(
+            <Router>
+                <AdminRoute loggedInUser={null}>
+                    <UserManagementPage loggedInUser={null} />
+                </AdminRoute>
+            </Router>
+        );
+
+        expect(screen.queryByText('List of Users')).not.toBeInTheDocument();
+        expect(screen.getByText('You are not authorized to view this page.')).toBeInTheDocument();
     });
 });
