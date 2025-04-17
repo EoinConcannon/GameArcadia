@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import CartPage from '../components/CartPage';
 import { useCart } from '../contexts/CartContext';
 
+// Mock the CSS import
+jest.mock('../styles/CartPage.css', () => ({}), { virtual: true });
+
 // Mock the hooks
 jest.mock('../contexts/CartContext', () => ({
     useCart: jest.fn(),
