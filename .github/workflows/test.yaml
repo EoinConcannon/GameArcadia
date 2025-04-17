@@ -38,10 +38,25 @@ jobs:
         echo "REACT_APP_MOCK_API=true" >> $GITHUB_ENV
         echo "NODE_ENV=test" >> $GITHUB_ENV
 
-    # Add Jest configuration
+    # Create mocks directory and files for CSS and other assets
+    - name: Setup Mocks Directory
+      run: |
+        mkdir -p __mocks__
+        echo "module.exports = 'test-file-stub';" > __mocks__/fileMock.js
+
+    # Add Enhanced Jest configuration
     - name: Create Jest config
       run: |
-        echo '{"testEnvironment": "jsdom", "collectCoverageFrom": ["src/**/*.{js,jsx}", "!src/index.js"]}' > jest.config.json
+        echo '{
+          "testEnvironment": "jsdom", 
+          "collectCoverageFrom": ["src/**/*.{js,jsx}", "!src/index.js"],
+          "moduleNameMapper": {
+            "\\\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/__mocks__/fileMock.js",
+            "\\\\.(css|less|scss|sass)$": "identity-obj-proxy"
+          },
+          "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"],
+          "transformIgnorePatterns": ["node_modules/(?!bootstrap|@stripe|@fortawesome)/"]
+        }' > jest.config.json
         
     # Run tests with increased memory allocation and proper options
     - name: Run Jest tests
