@@ -7,4 +7,7 @@ module.exports = {
     setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
 
     moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node'],
+
+    // Allow Jest to transform the `axios` module
+    transformIgnorePatterns: ['/node_modules/(?!axios)/'],
 };
