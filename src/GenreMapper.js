@@ -5,8 +5,8 @@ class GenreMapper {
         this.genreGraph = {};
     }
 
+    // Initializes genre relationships and weights based on a list of games
     async initializeGenreMappings(games) {
-        // Ensure games is an array
         games = Array.isArray(games) ? games : [];
 
         const genreCoOccurrence = {};
@@ -14,19 +14,17 @@ class GenreMapper {
         const genreGraph = {};
 
         games.forEach(game => {
-            // Ensure game.genres is an array
             const genres = (game.genres || []).map(g => g.name);
 
+            // Track genre frequency and initialize graph nodes
             genres.forEach(genre => {
                 genreFrequency[genre] = (genreFrequency[genre] || 0) + 1;
-                
-                // Initialize graph for each genre
                 if (!genreGraph[genre]) {
                     genreGraph[genre] = new Set();
                 }
             });
 
-            // Build genre graph
+            // Build connections between genres that co-occur
             for (let i = 0; i < genres.length; i++) {
                 for (let j = i + 1; j < genres.length; j++) {
                     genreGraph[genres[i]].add(genres[j]);
@@ -41,22 +39,23 @@ class GenreMapper {
 
         this.genreGraph = genreGraph;
 
-        // More sophisticated genre weight calculation
+        // Calculate weights with log-scaling and slight de-emphasis of lower-ranked genres
         this.genreWeights = Object.fromEntries(
             Object.entries(genreFrequency)
                 .sort((a, b) => b[1] - a[1])
                 .map(([genre, count], index) => [
-                    genre, 
-                    Math.log(count + 1) * (6 - index * 0.2)  // Logarithmic weight with better distribution
+                    genre,
+                    Math.log(count + 1) * (6 - index * 0.2)
                 ])
         );
 
         this.complementaryGenreMap = this.generateComplementaryGenres(genreCoOccurrence);
     }
 
+    // Returns least frequent co-occurring genres as complements
     generateComplementaryGenres(genreCoOccurrence) {
         const complementaryGenres = {};
-        
+
         Object.keys(this.genreWeights).forEach(baseGenre => {
             const complementCandidates = Object.entries(genreCoOccurrence)
                 .filter(([key]) => key.includes(baseGenre))
@@ -64,25 +63,27 @@ class GenreMapper {
                     const otherGenre = key.split('|').find(g => g !== baseGenre);
                     return { genre: otherGenre, count };
                 })
-                .sort((a, b) => a.count - b.count)
+                .sort((a, b) => a.count - b.count) // Favor less frequent co-occurrences
                 .slice(0, 3)
                 .map(item => item.genre);
-            
+
             complementaryGenres[baseGenre] = complementCandidates;
         });
 
         return complementaryGenres;
     }
 
+    // Returns weight of a genre, fallback to 1 if unknown
     getGenreWeight(genre) {
         return this.genreWeights[genre] || 1;
     }
 
+    // Returns complementary genres for a given genre
     getComplementaryGenres(genre) {
         return this.complementaryGenreMap[genre] || [];
     }
 
-    // New method to get related genres through graph traversal
+    // Returns related genres by traversing the genre graph up to a certain depth
     getRelatedGenres(genre, depth = 2) {
         const relatedGenres = new Set();
         const visited = new Set();

@@ -8,23 +8,23 @@ import rawgService from '../rawgService';
 import axios from 'axios';
 
 const FrontPage = ({ loggedInUser }) => {
-    const [randomGame, setRandomGame] = useState(null); // State to store the random game
-    const [inventory, setInventory] = useState([]); // State to store user's inventory
-    const [recommendedGames, setRecommendedGames] = useState([]); // State to store recommended games
-    const [topGames, setTopGames] = useState([]); // State to store top games
-    const [searchQuery, setSearchQuery] = useState(''); // State to track search query
-    const [searchResults, setSearchResults] = useState([]); // State to store search results
-    const { cartItems, addToCart } = useCart(); // Hook to access cart context
-    const navigate = useNavigate(); // Hook to navigate to different routes
+    // State declarations
+    const [randomGame, setRandomGame] = useState(null);
+    const [inventory, setInventory] = useState([]);
+    const [recommendedGames, setRecommendedGames] = useState([]);
+    const [topGames, setTopGames] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const { cartItems, addToCart } = useCart();
+    const navigate = useNavigate();
 
-    // Add loading state
     const [isLoading, setIsLoading] = useState({
         featuredGame: true,
         recommendations: false,
         topGames: false
     });
 
-    // Function to shuffle an array
+    // Helper: Shuffle an array
     const shuffleArray = (array) => {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -33,14 +33,14 @@ const FrontPage = ({ loggedInUser }) => {
         return array;
     };
 
-    // Fetch games from RAWG API
+    // Fetch games for featured + initial recommendations
     useEffect(() => {
         const fetchGames = async () => {
             try {
                 const games = await rawgService.getGames();
                 const shuffledGames = shuffleArray(games);
-                setRecommendedGames(shuffledGames.slice(0, 6)); // Set the first 6 shuffled games as recommended games
-                setRandomGame(games[Math.floor(Math.random() * games.length)]); // Set a random game
+                setRecommendedGames(shuffledGames.slice(0, 6));
+                setRandomGame(games[Math.floor(Math.random() * games.length)]);
             } catch (error) {
                 console.error('Error fetching games from RAWG API:', error);
             }
@@ -49,15 +49,15 @@ const FrontPage = ({ loggedInUser }) => {
         fetchGames();
     }, []);
 
-    // Fetch popular games from RAWG API
+    // Fetch popular games
     useEffect(() => {
         const fetchPopularGames = async () => {
             setIsLoading(prev => ({ ...prev, topGames: true }));
             try {
                 const popularGames = await rawgService.getPopularGames();
-                setTopGames(popularGames.slice(0, 6)); // Set the first 6 popular games as top games
+                setTopGames(popularGames.slice(0, 6));
             } catch (error) {
-                console.error('Error fetching popular games from RAWG API:', error);
+                console.error('Error fetching popular games:', error);
             } finally {
                 setIsLoading(prev => ({ ...prev, topGames: false }));
             }
@@ -66,7 +66,7 @@ const FrontPage = ({ loggedInUser }) => {
         fetchPopularGames();
     }, []);
 
-    // Fetch inventory from Supabase when the component displays
+    // Fetch user's inventory from Supabase
     useEffect(() => {
         const fetchInventory = async () => {
             if (!loggedInUser) return;
@@ -81,7 +81,7 @@ const FrontPage = ({ loggedInUser }) => {
                 return;
             }
 
-            // Fetch game details including genres
+            // Fetch genre details for each owned game
             const inventoryDetails = await Promise.all(
                 data.map(async (item) => {
                     const gameDetails = await rawgService.getGameDetails(item.game_id);
@@ -89,62 +89,51 @@ const FrontPage = ({ loggedInUser }) => {
                 })
             );
 
-            setInventory(inventoryDetails); // Store inventory with genre information
+            setInventory(inventoryDetails);
         };
 
         fetchInventory();
     }, [loggedInUser]);
 
+    // Determine user's top 3 genres
     const getFavoriteGenres = useCallback(() => {
         const genreCount = {};
 
         inventory.forEach((game) => {
-            if (Array.isArray(game.genres)) {
-                game.genres.forEach((genre) => {
-                    genreCount[genre] = (genreCount[genre] || 0) + 1;
-                });
-            }
+            game.genres?.forEach((genre) => {
+                genreCount[genre] = (genreCount[genre] || 0) + 1;
+            });
         });
 
-        const favoriteGenres = Object.entries(genreCount)
+        return Object.entries(genreCount)
             .sort((a, b) => b[1] - a[1])
             .map(([genre]) => genre)
-            .slice(0, 3); // Top 3 genres
-
-        return favoriteGenres;
+            .slice(0, 3);
     }, [inventory]);
 
+    // Helper: filter out games user already owns
     const filteredOwnedGames = useMemo(() => {
         const ownedIds = inventory.map(game => game.id);
         return games => games.filter(game => !ownedIds.includes(game.id));
     }, [inventory]);
 
-    // Fetch recommended games based on favorite genres
+    // Fetch personalized recommendations
     useEffect(() => {
         const fetchRecommendedGames = async () => {
             if (!loggedInUser || inventory.length === 0) return;
 
             const favoriteGenres = getFavoriteGenres();
-
-            if (favoriteGenres.length === 0) {
-                return;
-            }
+            if (favoriteGenres.length === 0) return;
 
             try {
-                // Fetch games for each favorite genre
                 const genreGames = await Promise.all(
-                    favoriteGenres.map((genre) => {
-                        return rawgService.getGamesByGenre(genre);
-                    })
+                    favoriteGenres.map((genre) => rawgService.getGamesByGenre(genre))
                 );
 
-                // Flatten the results and remove duplicates
                 const allGames = genreGames.flat();
-
-                // Filter out owned games
                 const filteredGames = filteredOwnedGames(allGames);
 
-                setRecommendedGames(filteredGames.slice(0, 6)); // Limit to 6 games
+                setRecommendedGames(filteredGames.slice(0, 6));
             } catch (error) {
                 console.error('Error fetching recommended games:', error);
             }
@@ -153,25 +142,17 @@ const FrontPage = ({ loggedInUser }) => {
         fetchRecommendedGames();
     }, [loggedInUser, inventory, getFavoriteGenres, filteredOwnedGames]);
 
-    // Improved fallback recommendations that adapt to user's genres
+    // Backup recommendation strategy if primary fails
     useEffect(() => {
         const fetchFallbackRecommendations = async () => {
-            // Only proceed if we need fallback recommendations
             if (recommendedGames.length > 0 || !loggedInUser || inventory.length === 0) return;
 
-            console.log("Using fallback recommendation system");
-
             try {
-                // Get the user's favorite genres
                 const favoriteGenres = getFavoriteGenres();
-                const primaryGenre = favoriteGenres.length > 0 ? favoriteGenres[0] : null;
+                const primaryGenre = favoriteGenres[0] || null;
 
-                // If we have at least one genre preference, use it
                 if (primaryGenre) {
-                    // Try direct search with the primary genre
                     const directSearch = await rawgService.searchGames(primaryGenre);
-
-                    // Remove games the user already owns
                     const ownedIds = inventory.map(game => game.id);
                     const filteredGames = directSearch.filter(game => !ownedIds.includes(game.id));
 
@@ -180,7 +161,7 @@ const FrontPage = ({ loggedInUser }) => {
                         return;
                     }
 
-                    // If direct search didn't work, try tags
+                    // Try fallback using tags
                     const response = await axios.get(`https://api.rawg.io/api/games`, {
                         params: {
                             key: process.env.REACT_APP_RAWG_API_KEY,
@@ -198,19 +179,15 @@ const FrontPage = ({ loggedInUser }) => {
                     }
                 }
 
-                // Last resort - get popular games as recommendations
+                // Final fallback: popular games
                 const popularGames = await rawgService.getPopularGames();
-
-                // Remove owned games
                 const ownedIds = inventory.map(game => game.id);
                 const filteredPopular = popularGames.filter(game => !ownedIds.includes(game.id));
 
                 setRecommendedGames(filteredPopular.slice(0, 6));
-
             } catch (error) {
                 console.error("Error in fallback recommendations:", error);
 
-                // Absolute last resort - get any games
                 try {
                     const games = await rawgService.getGames();
                     setRecommendedGames(games.slice(0, 6));
@@ -223,13 +200,11 @@ const FrontPage = ({ loggedInUser }) => {
         fetchFallbackRecommendations();
     }, [recommendedGames.length, loggedInUser, inventory, getFavoriteGenres]);
 
-    // Check if a game is owned by the user
+    // Helpers for checking ownership/cart
     const isOwned = (gameId) => inventory.some((game) => game.id === gameId);
-
-    // Check if a game is in the cart
     const isInCart = (gameId) => cartItems.some((item) => item.game_id === gameId);
 
-    // Handle search input change and filter games
+    // Handle search logic
     const handleSearchChange = async (e) => {
         const query = e.target.value;
         setSearchQuery(query);
@@ -237,7 +212,6 @@ const FrontPage = ({ loggedInUser }) => {
         if (query.trim().length > 0) {
             try {
                 const results = await rawgService.searchGames(query);
-                // Filter results to only include games whose name starts with the search query
                 const filteredResults = results.filter((game) =>
                     game.name.toLowerCase().startsWith(query.toLowerCase())
                 );
@@ -250,17 +224,11 @@ const FrontPage = ({ loggedInUser }) => {
         }
     };
 
-    // Navigate to game details page
-    const handleCardClick = (gameId) => {
-        navigate(`/game/${gameId}`);
-    };
+    // Navigation helpers
+    const handleCardClick = (gameId) => navigate(`/game/${gameId}`);
+    const handleSearchResultClick = (gameId) => navigate(`/game/${gameId}`);
 
-    // Navigate to game details page from search results
-    const handleSearchResultClick = (gameId) => {
-        navigate(`/game/${gameId}`);
-    };
-
-    // Create a GameCard component
+    // Card UI for displaying each game
     const GameCard = ({ game, isOwned, isInCart, addToCart, onClick }) => (
         <Card className="card" onClick={() => onClick(game.id)}>
             <Card.Img
@@ -292,12 +260,13 @@ const FrontPage = ({ loggedInUser }) => {
     );
 
     if (!randomGame) {
-        return <p>Loading featured game...</p>; // Display loading message until game is fetched
+        return <p>Loading featured game...</p>;
     }
 
     return (
         <div className="front-page">
             <h2>Welcome to GameArcadia</h2>
+
             {/* Search Bar */}
             <div className="search-bar">
                 <Form>
@@ -330,6 +299,8 @@ const FrontPage = ({ loggedInUser }) => {
                     </ListGroup>
                 )}
             </div>
+
+            {/* Featured Game */}
             <h4 className="section-title">Featured Game</h4>
             <Row className="game-list">
                 <Col xs={12} sm={6} md={4} lg={3}>
@@ -343,6 +314,7 @@ const FrontPage = ({ loggedInUser }) => {
                 </Col>
             </Row>
 
+            {/* Recommendations */}
             <h4 className="section-title">Recommended Games</h4>
             {recommendedGames.length === 0 ? (
                 <p>No recommendations available at the moment. Try adding more games to your library!</p>
@@ -362,6 +334,7 @@ const FrontPage = ({ loggedInUser }) => {
                 </Row>
             )}
 
+            {/* Top Games */}
             <h4 className="section-title">Top Games</h4>
             {isLoading.topGames ? (
                 <p>Loading top games...</p>

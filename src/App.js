@@ -25,10 +25,13 @@ import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import OrderHistory from './components/OrderHistory';
 
 function App() {
+  // State to store the currently logged-in user
   const [loggedInUser, setLoggedInUser] = useState(null);
+
+  // Hook for programmatic navigation
   const navigate = useNavigate();
 
-  // Improved localStorage handling with error checking
+  // Load the logged-in user from localStorage on app initialization
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem('loggedInUser');
@@ -38,12 +41,11 @@ function App() {
       }
     } catch (error) {
       console.error('Error reading user from localStorage:', error);
-      // Optional: Clear problematic localStorage item
-      localStorage.removeItem('loggedInUser');
+      localStorage.removeItem('loggedInUser'); // Clear corrupted data
     }
   }, []);
 
-  // Improved logout handling
+  // Handle user logout by clearing state and localStorage, then navigating to the home page
   const handleLogout = () => {
     try {
       setLoggedInUser(null);
@@ -51,24 +53,27 @@ function App() {
       navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
-      // Fallback navigation
-      window.location.href = '/';
+      window.location.href = '/'; // Fallback navigation
     }
   };
 
   return (
+    // Provide cart context to all components
     <CartProvider loggedInUser={loggedInUser}>
       <div className="app-container">
+        {/* Navbar for navigation */}
         <Navbar bg="dark" variant="dark" className="app-header">
           <Container>
             <Navbar.Brand as={Link} to="/">GameArcadia</Navbar.Brand>
             <Nav className="me-auto">
               <Nav.Link as={Link} to="/store">Store</Nav.Link>
+              {/* Admin link visible only to users with the admin role */}
               {loggedInUser?.role === "admin" && (
                 <Nav.Link as={Link} to="/admin">Admin</Nav.Link>
               )}
             </Nav>
             <Nav className="ms-auto">
+              {/* Show user-specific links if logged in */}
               {loggedInUser ? (
                 <>
                   <Nav.Link as={Link} to="/profile" className="ms-3">{loggedInUser.username}</Nav.Link>
@@ -78,14 +83,17 @@ function App() {
                   <Nav.Link onClick={handleLogout} className="ms-3">Logout</Nav.Link>
                 </>
               ) : (
+                // Show login link if no user is logged in
                 <Nav.Link as={Link} to="/login" className="ms-3">Login</Nav.Link>
               )}
             </Nav>
           </Container>
         </Navbar>
 
+        {/* Main content area */}
         <div className="content">
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<FrontPage loggedInUser={loggedInUser} />} />
             <Route path="/login" element={<LoginPage setLoggedInUser={setLoggedInUser} />} />
             <Route path="/profile" element={<ProfilePage loggedInUser={loggedInUser} setLoggedInUser={setLoggedInUser} />} />
@@ -95,6 +103,8 @@ function App() {
             <Route path="/cart" element={<CartPage loggedInUser={loggedInUser} />} />
             <Route path="/checkout" element={<CheckOutPage loggedInUser={loggedInUser} />} />
             <Route path="/about" element={<AboutPage />} />
+
+            {/* Admin-only routes */}
             <Route path="/admin" element={
               <AdminRoute loggedInUser={loggedInUser}>
                 <AdminPage loggedInUser={loggedInUser} />
@@ -110,6 +120,8 @@ function App() {
                 <UserManagementPage loggedInUser={loggedInUser} />
               </AdminRoute>
             } />
+
+            {/* Dynamic route for game details */}
             <Route
               path="/game/:gameId"
               element={<GameDetailsPage loggedInUser={loggedInUser} />}
@@ -118,6 +130,7 @@ function App() {
           </Routes>
         </div>
 
+        {/* Footer section */}
         <footer className="footer">
           <Navbar bg="dark" variant="dark" className="app-footer">
             <Container>

@@ -4,7 +4,7 @@ const AboutPage = () => {
 
     return (
         <div className="front-page">
-            <p>This is the about page</p>
+            <p>This is my final year project</p>
         </div>
     );
 };
