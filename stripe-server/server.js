@@ -2,7 +2,7 @@ const express = require('express');
 const Stripe = require('stripe');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config();
 
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
