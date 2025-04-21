@@ -2,7 +2,7 @@
 
 A neural recommendation-based game marketplace platform built with React.
 
-![GameArcadia Screenshot](screenshot.png)
+![GameArcadia Screenshot](images/screenshot.PNG)
 
 ## Overview
 
