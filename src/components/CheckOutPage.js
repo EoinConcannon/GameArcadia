@@ -29,7 +29,7 @@ const CheckoutForm = ({ loggedInUser, cartItems, clearCart }) => {
         setProcessing(true);
 
         try {
-            const response = await fetch('http://localhost:3001/api/create-payment-intent', {
+            const response = await fetch(`${process.env.REACT_APP_STRIPE_API_URL}/api/create-payment-intent`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
