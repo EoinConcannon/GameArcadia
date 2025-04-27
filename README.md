@@ -90,6 +90,13 @@ gamearcadia/
 └── public/           # Public assets (e.g., images, index.html)
 ```
 
+## Project Demo
+https://www.youtube.com/watch?v=a8zSm5TNe9o
+
+## Stripe Help
+- https://docs.stripe.com/testing
+- 4000003720000005
+
 ## Acknowledgments
 
 - [RAWG API](https://rawg.io/apidocs) for comprehensive game data
